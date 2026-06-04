@@ -4,12 +4,17 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Agent;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', fn() => redirect()->route('login'));
 
 Route::get('/login',  [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
 Route::post('/logout',[AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+Route::get('/test-inertia', function () {
+    return inertia::render('Test');
+});
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->middleware(['auth','role:admin'])->group(function () {
