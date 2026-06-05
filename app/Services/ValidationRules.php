@@ -143,6 +143,11 @@ class ValidationRules
             'iban'       => ['nullable', 'string', 'regex:/^[A-Z0-9]+$/', 'max:34'],
             'swift_code' => ['nullable', 'string', 'regex:/^[A-Z0-9]+$/', 'max:11'],
             'logo'       => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'theme_mode' => ['required', 'in:dark,light'],
+            'primary_color' => ['required', 'string'],
+            'secondary_color' => ['required', 'string'],
+            'currency_code' => ['required', 'string'],
+            'currency_symbol' => ['required', 'string'],
         ];
     }
 

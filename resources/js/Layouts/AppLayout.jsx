@@ -1,21 +1,97 @@
-import { usePage } from '@inertiajs/react';
-import Sidebar from '../Components/Sidebar';
-import Header from '../Components/Header';
+import { useEffect, useState } from "react";
+import { Layout, notification } from "antd";
+import { usePage } from "@inertiajs/react";
+
+import Sidebar from "@/Components/Sidebar";
+import Header from "@/Components/Header";
+
+const { Sider, Content } = Layout;
 
 export default function AppLayout({ title, children }) {
-    const { auth } = usePage().props;
+    const [api, contextHolder] = notification.useNotification();
+    const { flash } = usePage().props;
+
+    const [collapsed, setCollapsed] = useState(
+        localStorage.getItem("sidebar-collapsed") === "true",
+    );
+
+    const toggleSidebar = () => {
+        const value = !collapsed;
+        setCollapsed(value);
+        localStorage.setItem("sidebar-collapsed", value);
+    };
+
+    // Show flash toast whenever Inertia navigates and flash is set
+    useEffect(() => {
+        if (flash?.success) {
+            api.success({
+                message: "Success",
+                description: flash.success,
+                placement: "topRight",
+                duration: 3,
+            });
+        }
+        if (flash?.error) {
+            api.error({
+                message: "Error",
+                description: flash.error,
+                placement: "topRight",
+                duration: 4,
+            });
+        }
+    }, [flash]);
 
     return (
-        <div className="min-h-screen bg-[#0f1117] text-slate-200">
-            <Sidebar user={auth.user} />
+        <Layout
+            style={{
+                minHeight: "100vh",
+                background: "var(--bg-primary)",
+            }}
+        >
+            {contextHolder}
 
-            <div className="ml-[240px] min-h-screen flex flex-col">
-                <Header title={title} user={auth.user} />
+            <Sider
+                collapsible
+                collapsed={collapsed}
+                trigger={null}
+                width={240}
+                collapsedWidth={64}
+                style={{
+                    position: "fixed",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    background: "var(--bg-secondary)",
+                    borderRight: "1px solid var(--border-color, rgba(128,128,128,0.2))",
+                }}
+            >
+                <Sidebar collapsed={collapsed} />
+            </Sider>
 
-                <main className="flex-1 p-6">
+            <Layout
+                style={{
+                    marginLeft: collapsed ? 64 : 240,
+                    transition: "all 0.2s ease",
+                    background: "var(--bg-primary)",
+                }}
+            >
+                <Header
+                    title={title}
+                    collapsed={collapsed}
+                    onToggleSidebar={toggleSidebar}
+                />
+
+                <Content
+                    style={{
+                        padding: 24,
+                        background: "var(--bg-primary)",
+                        color: "var(--text-primary)",
+                    }}
+                >
                     {children}
-                </main>
-            </div>
-        </div>
+                </Content>
+            </Layout>
+        </Layout>
     );
 }
+

@@ -34,9 +34,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','role:admin'])->group
 
     Route::get('/customers',              [Admin\CustomerController::class, 'index'])     ->name('customers.index');
     Route::post('/customers',             [Admin\CustomerController::class, 'store'])     ->name('customers.store');
+    Route::post('/customers/quick',       [Admin\CustomerController::class, 'quickStore'])->name('customers.quick');
     Route::put('/customers/{customer}',   [Admin\CustomerController::class, 'update'])   ->name('customers.update');
     Route::delete('/customers/{customer}',[Admin\CustomerController::class, 'destroy'])  ->name('customers.destroy');
-    Route::post('/customers/quick',       [Admin\CustomerController::class, 'quickStore'])->name('customers.quick');
 
     Route::get('/settings',  [Admin\SettingsController::class, 'index']) ->name('settings.index');
     Route::put('/settings',  [Admin\SettingsController::class, 'update'])->name('settings.update');

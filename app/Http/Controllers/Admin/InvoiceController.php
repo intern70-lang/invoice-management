@@ -9,25 +9,38 @@ use App\Models\Product;
 use App\Models\SystemSetting;
 use App\Services\ValidationRules;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class InvoiceController extends Controller
 {
     public function index()
     {
-        $invoices = Invoice::with('customer', 'creator')->latest()->get();
-        return view('admin.invoices.index', compact('invoices'));
+        $invoices = Invoice::with('customer', 'creator')
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/Invoices', [
+            'invoices' => $invoices,
+        ]);
     }
 
     public function create()
     {
-        $customers = Customer::orderBy('name')->get();
-        $products  = Product::where('is_active', true)->orderBy('name')->get();
-        return view('admin.invoices.create', compact('customers', 'products'));
+        return Inertia::render('Admin/CreateInvoice', [
+            'customers' => Customer::orderBy('name')->get(),
+            'products'  => Product::where('is_active', true)
+                ->orderBy('name')
+                ->get(),
+            'settings' => SystemSetting::get(),
+        ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate(ValidationRules::invoice(), ValidationRules::invoiceMessages());
+        $request->validate(
+            ValidationRules::invoice(),
+            ValidationRules::invoiceMessages()
+        );
 
         $invoice = Invoice::create([
             'invoice_number' => Invoice::generateNumber(),
@@ -41,17 +54,28 @@ class InvoiceController extends Controller
             'status'         => 'saved',
         ]);
 
-        $totalVat = $totalAmount = 0;
+        $totalVat = 0;
+        $totalAmount = 0;
+
         foreach ($request->items as $item) {
-            $product   = Product::find($item['product_id']);
-            $price     = (float) $item['selling_price'];
-            $qty       = (int)   $item['qty'];
-            $vatPct    = (int)   $item['vat_percent'];
-            $vatAmt    = round($price * $qty * ($vatPct / 100), 2);
-            $lineTotal = round($price * $qty + $vatAmt, 2);
+            $product = Product::find($item['product_id']);
+
+            $price = (float) $item['selling_price'];
+            $qty = (int) $item['qty'];
+            $vatPct = (int) $item['vat_percent'];
+
+            $vatAmt = round(
+                $price * $qty * ($vatPct / 100),
+                2
+            );
+
+            $lineTotal = round(
+                ($price * $qty) + $vatAmt,
+                2
+            );
 
             $invoice->items()->create([
-                'product_id'    => $item['product_id'],
+                'product_id'    => $product->id,
                 'product_name'  => $product->name,
                 'selling_price' => $price,
                 'vat_percent'   => $vatPct,
@@ -59,26 +83,48 @@ class InvoiceController extends Controller
                 'vat_amount'    => $vatAmt,
                 'line_total'    => $lineTotal,
             ]);
-            $totalVat    += $vatAmt;
+
+            $totalVat += $vatAmt;
             $totalAmount += $lineTotal;
         }
-        $invoice->update(['total_vat' => $totalVat, 'total_amount' => $totalAmount]);
-        return redirect()->route('admin.invoices.show', $invoice)
-            ->with('toast_success', 'Invoice <strong>' . $invoice->invoice_number . '</strong> saved successfully.');
+
+        $invoice->update([
+            'total_vat' => $totalVat,
+            'total_amount' => $totalAmount,
+        ]);
+
+        return redirect()
+            ->route('admin.invoices.show', $invoice)
+            ->with(
+                'success',
+                "Invoice {$invoice->invoice_number} saved successfully."
+            );
     }
 
     public function show(Invoice $invoice)
     {
-        $invoice->load('customer', 'items.product', 'creator');
-        $settings = SystemSetting::get();
-        return view('admin.invoices.show', compact('invoice', 'settings'));
+        $invoice->load(
+            'customer',
+            'items.product',
+            'creator'
+        );
+
+        return Inertia::render('Admin/ShowInvoice', [
+            'invoice' => $invoice,
+            'settings' => SystemSetting::get(),
+        ]);
     }
 
     public function destroy(Invoice $invoice)
     {
         $number = $invoice->invoice_number;
+
         $invoice->delete();
-        return back()->with('toast_success', 'Invoice <strong>' . $number . '</strong> deleted.');
+
+        return back()->with(
+            'success',
+            "Invoice {$number} deleted."
+        );
     }
 
     public function customerData(Customer $customer)

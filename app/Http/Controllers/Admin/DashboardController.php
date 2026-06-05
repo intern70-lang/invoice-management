@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Product;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -20,6 +21,10 @@ class DashboardController extends Controller
             'revenue'    => Invoice::sum('total_amount'),
         ];
         $recentInvoices = Invoice::with('customer')->latest()->take(5)->get();
-        return view('admin.dashboard', compact('stats', 'recentInvoices'));
+        // return view('admin.dashboard', compact('stats', 'recentInvoices'));
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => $stats,
+            'recentInvoices' => $recentInvoices,
+        ]);
     }
 }
