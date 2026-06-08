@@ -125,7 +125,7 @@ export default function Invoices({ invoices }) {
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center">
-                                <FileText size={20} />
+                                <FileText size={20} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-semibold text-(--text-primary) m-0!">

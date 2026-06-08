@@ -37,7 +37,7 @@ const calcRow = (price, qty, vatPct) => {
 };
 
 // ── component ────────────────────────────────────────────────────────────────
-export default function CreateInvoice({ customers, products, settings }) {
+export default function CreateInvoice({ customers, areas = [], products, settings }) {
     const currency = settings?.currency_symbol ?? "£";
 
     const [form] = Form.useForm();
@@ -372,10 +372,8 @@ export default function CreateInvoice({ customers, products, settings }) {
                                             value: customerInfo.phone,
                                         },
                                         {
-                                            label: "VAT Number",
-                                            value: customerInfo.vat_registered
-                                                ? customerInfo.vat_number || "—"
-                                                : "Not registered",
+                                            label: "Area",
+                                            value: customerInfo.area?.name,
                                         },
                                     ].map(({ label, value }) => (
                                         <div key={label}>
@@ -684,6 +682,7 @@ export default function CreateInvoice({ customers, products, settings }) {
                 open={quickOpen}
                 onClose={() => setQuickOpen(false)}
                 mode="quick"
+                areas={areas}
                 onSuccess={handleQuickSuccess}
             />
         </>

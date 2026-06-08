@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Area;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Product;
@@ -28,6 +29,7 @@ class InvoiceController extends Controller
     {
         return Inertia::render('Admin/CreateInvoice', [
             'customers' => Customer::orderBy('name')->get(),
+            'areas' => Area::where('is_active', true)->orderBy('name')->get(),
             'products'  => Product::where('is_active', true)
                 ->orderBy('name')
                 ->get(),

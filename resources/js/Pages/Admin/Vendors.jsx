@@ -1,20 +1,16 @@
-// resources/js/Pages/Admin/Categories.jsx
-
 import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     Button,
-    Tag,
     Space,
     Typography,
     Popconfirm,
     Tooltip,
     Input,
-    Switch,
     Badge,
 } from "antd";
 import {
-    TagIcon,
+    Truck,
     Pencil,
     Trash2,
     Search,
@@ -24,48 +20,50 @@ import {
 
 import AppLayout from "@/Layouts/AppLayout";
 import CustomTable from "@/Components/Ui/CustomTable";
-import CategoryFormModal from "@/Components/Ui/CategoryFormModal";
+import VendorFormModal from "@/Components/Ui/VendorFormModal";
 
 const { Text } = Typography;
 
-export default function Categories({ categories }) {
-    // ── Modal state ──────────────────────────────────────────────────────────
+export default function Vendors({ vendors }) {
     const [modalOpen, setModalOpen] = useState(false);
-    const [editingCategory, setEditingCategory] = useState(null);
-
-    // ── Search / filter ──────────────────────────────────────────────────────
+    const [editingVendor, setEditingVendor] = useState(null);
     const [search, setSearch] = useState("");
 
-    const filtered = categories.filter((c) =>
-        c.name?.toLowerCase().includes(search.toLowerCase()),
-    );
+    const filtered = vendors.filter((vendor) => {
+        const term = search.toLowerCase();
+        return (
+            vendor.name?.toLowerCase().includes(term) ||
+            vendor.company?.toLowerCase().includes(term) ||
+            vendor.phone?.toLowerCase().includes(term) ||
+            vendor.email?.toLowerCase().includes(term) ||
+            vendor.city?.toLowerCase().includes(term)
+        );
+    });
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
     const openAdd = () => {
-        setEditingCategory(null);
+        setEditingVendor(null);
         setModalOpen(true);
     };
 
-    const openEdit = (category) => {
-        setEditingCategory(category);
+    const openEdit = (vendor) => {
+        setEditingVendor(vendor);
         setModalOpen(true);
     };
 
-    const handleToggle = (category) => {
+    const handleToggle = (vendor) => {
         router.patch(
-            `/admin/categories/${category.id}/toggle`,
+            `/admin/vendors/${vendor.id}/toggle`,
             {},
             { preserveScroll: true },
         );
     };
 
-    const handleDelete = (category) => {
-        router.delete(`/admin/categories/${category.id}`, {
+    const handleDelete = (vendor) => {
+        router.delete(`/admin/vendors/${vendor.id}`, {
             preserveScroll: true,
         });
     };
 
-    // ── Table columns ────────────────────────────────────────────────────────
     const columns = [
         {
             title: "#",
@@ -78,17 +76,42 @@ export default function Categories({ categories }) {
             ),
         },
         {
-            title: "Name",
+            title: "Vendor",
             dataIndex: "name",
             key: "name",
-            render: (name) => (
+            render: (name, record) => (
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-(--primary) flex items-center justify-center text-white text-xs font-bold shrink-0">
                         {name?.charAt(0)?.toUpperCase()}
                     </div>
-                    <Text strong>{name}</Text>
+                    <div className="min-w-0">
+                        <Text strong>{name}</Text>
+                        {record.company && (
+                            <div className="text-xs text-(--text-secondary) truncate">
+                                {record.company}
+                            </div>
+                        )}
+                    </div>
                 </div>
             ),
+        },
+        {
+            title: "Phone",
+            dataIndex: "phone",
+            key: "phone",
+            render: (phone) => phone || <Text type="secondary">-</Text>,
+        },
+        {
+            title: "Email",
+            dataIndex: "email",
+            key: "email",
+            render: (email) => email || <Text type="secondary">-</Text>,
+        },
+        {
+            title: "City",
+            dataIndex: "city",
+            key: "city",
+            render: (city) => city || <Text type="secondary">-</Text>,
         },
         {
             title: "Status",
@@ -122,7 +145,7 @@ export default function Categories({ categories }) {
                         />
                     </Tooltip>
 
-                    <Tooltip title="Edit Category">
+                    <Tooltip title="Edit Vendor">
                         <Button
                             size="small"
                             icon={<Pencil size={13} />}
@@ -131,14 +154,14 @@ export default function Categories({ categories }) {
                     </Tooltip>
 
                     <Popconfirm
-                        title="Delete category?"
+                        title="Delete vendor?"
                         description={`Are you sure you want to delete "${record.name}"?`}
                         onConfirm={() => handleDelete(record)}
                         okText="Delete"
                         cancelText="Cancel"
                         okButtonProps={{ danger: true }}
                     >
-                        <Tooltip title="Delete Category">
+                        <Tooltip title="Delete Vendor">
                             <Button
                                 size="small"
                                 danger
@@ -151,26 +174,24 @@ export default function Categories({ categories }) {
         },
     ];
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <>
-            <Head title="Categories" />
+            <Head title="Vendors" />
 
-            <AppLayout title="Categories">
+            <AppLayout title="Vendors">
                 <div className="space-y-5">
-                    {/* Page header */}
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center">
-                                <TagIcon size={20} className="text-white" />
+                                <Truck size={20} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-semibold text-(--text-primary) m-0!">
-                                    Categories
+                                    Vendors
                                 </h2>
                                 <p className="text-xs text-(--text-secondary) mt-0.5 m-0!">
-                                    {categories.length} total categor
-                                    {categories.length !== 1 ? "ies" : "y"}
+                                    {vendors.length} total vendor
+                                    {vendors.length !== 1 ? "s" : ""}
                                 </p>
                             </div>
                         </div>
@@ -183,23 +204,22 @@ export default function Categories({ categories }) {
                                         className="text-(--text-secondary)"
                                     />
                                 }
-                                placeholder="Search categories…"
+                                placeholder="Search vendors..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 allowClear
-                                style={{ width: 220 }}
+                                style={{ width: 240 }}
                             />
                             <Button
                                 type="primary"
-                                icon={<TagIcon size={15} />}
+                                icon={<Truck size={15} />}
                                 onClick={openAdd}
                             >
-                                Add Category
+                                Add Vendor
                             </Button>
                         </div>
                     </div>
 
-                    {/* Table */}
                     <CustomTable
                         columns={columns}
                         data={filtered}
@@ -213,11 +233,10 @@ export default function Categories({ categories }) {
                     />
                 </div>
 
-                {/* Reusable Add / Edit Modal */}
-                <CategoryFormModal
+                <VendorFormModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    category={editingCategory}
+                    vendor={editingVendor}
                 />
             </AppLayout>
         </>

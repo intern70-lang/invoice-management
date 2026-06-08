@@ -1,20 +1,16 @@
-// resources/js/Pages/Admin/Categories.jsx
-
 import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     Button,
-    Tag,
     Space,
     Typography,
     Popconfirm,
     Tooltip,
     Input,
-    Switch,
     Badge,
 } from "antd";
 import {
-    TagIcon,
+    MapPin,
     Pencil,
     Trash2,
     Search,
@@ -24,48 +20,43 @@ import {
 
 import AppLayout from "@/Layouts/AppLayout";
 import CustomTable from "@/Components/Ui/CustomTable";
-import CategoryFormModal from "@/Components/Ui/CategoryFormModal";
+import AreaFormModal from "@/Components/Ui/AreaFormModal";
 
 const { Text } = Typography;
 
-export default function Categories({ categories }) {
-    // ── Modal state ──────────────────────────────────────────────────────────
+export default function Areas({ areas }) {
     const [modalOpen, setModalOpen] = useState(false);
-    const [editingCategory, setEditingCategory] = useState(null);
-
-    // ── Search / filter ──────────────────────────────────────────────────────
+    const [editingArea, setEditingArea] = useState(null);
     const [search, setSearch] = useState("");
 
-    const filtered = categories.filter((c) =>
-        c.name?.toLowerCase().includes(search.toLowerCase()),
+    const filtered = areas.filter((area) =>
+        area.name?.toLowerCase().includes(search.toLowerCase()),
     );
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
     const openAdd = () => {
-        setEditingCategory(null);
+        setEditingArea(null);
         setModalOpen(true);
     };
 
-    const openEdit = (category) => {
-        setEditingCategory(category);
+    const openEdit = (area) => {
+        setEditingArea(area);
         setModalOpen(true);
     };
 
-    const handleToggle = (category) => {
+    const handleToggle = (area) => {
         router.patch(
-            `/admin/categories/${category.id}/toggle`,
+            `/admin/areas/${area.id}/toggle`,
             {},
             { preserveScroll: true },
         );
     };
 
-    const handleDelete = (category) => {
-        router.delete(`/admin/categories/${category.id}`, {
+    const handleDelete = (area) => {
+        router.delete(`/admin/areas/${area.id}`, {
             preserveScroll: true,
         });
     };
 
-    // ── Table columns ────────────────────────────────────────────────────────
     const columns = [
         {
             title: "#",
@@ -122,7 +113,7 @@ export default function Categories({ categories }) {
                         />
                     </Tooltip>
 
-                    <Tooltip title="Edit Category">
+                    <Tooltip title="Edit Area">
                         <Button
                             size="small"
                             icon={<Pencil size={13} />}
@@ -131,14 +122,14 @@ export default function Categories({ categories }) {
                     </Tooltip>
 
                     <Popconfirm
-                        title="Delete category?"
+                        title="Delete area?"
                         description={`Are you sure you want to delete "${record.name}"?`}
                         onConfirm={() => handleDelete(record)}
                         okText="Delete"
                         cancelText="Cancel"
                         okButtonProps={{ danger: true }}
                     >
-                        <Tooltip title="Delete Category">
+                        <Tooltip title="Delete Area">
                             <Button
                                 size="small"
                                 danger
@@ -151,26 +142,24 @@ export default function Categories({ categories }) {
         },
     ];
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <>
-            <Head title="Categories" />
+            <Head title="Areas" />
 
-            <AppLayout title="Categories">
+            <AppLayout title="Areas">
                 <div className="space-y-5">
-                    {/* Page header */}
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center">
-                                <TagIcon size={20} className="text-white" />
+                                <MapPin size={20} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-semibold text-(--text-primary) m-0!">
-                                    Categories
+                                    Areas
                                 </h2>
                                 <p className="text-xs text-(--text-secondary) mt-0.5 m-0!">
-                                    {categories.length} total categor
-                                    {categories.length !== 1 ? "ies" : "y"}
+                                    {areas.length} total area
+                                    {areas.length !== 1 ? "s" : ""}
                                 </p>
                             </div>
                         </div>
@@ -183,7 +172,7 @@ export default function Categories({ categories }) {
                                         className="text-(--text-secondary)"
                                     />
                                 }
-                                placeholder="Search categories…"
+                                placeholder="Search areas..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 allowClear
@@ -191,15 +180,14 @@ export default function Categories({ categories }) {
                             />
                             <Button
                                 type="primary"
-                                icon={<TagIcon size={15} />}
+                                icon={<MapPin size={15} />}
                                 onClick={openAdd}
                             >
-                                Add Category
+                                Add Area
                             </Button>
                         </div>
                     </div>
 
-                    {/* Table */}
                     <CustomTable
                         columns={columns}
                         data={filtered}
@@ -213,11 +201,10 @@ export default function Categories({ categories }) {
                     />
                 </div>
 
-                {/* Reusable Add / Edit Modal */}
-                <CategoryFormModal
+                <AreaFormModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    category={editingCategory}
+                    area={editingArea}
                 />
             </AppLayout>
         </>

@@ -7,11 +7,36 @@ use Illuminate\Database\Eloquent\Model;
 class Customer extends Model
 {
     protected $fillable = [
-        'name', 'email', 'phone', 'customer_type',
-        'address', 'vat_registered', 'vat_number',
+        'customer_type',
+        'name',
+        'phone',
+        'gender',
+        'email',
+        'birthdate',
+        'area_id',
+        'shipping_address',
+        'address',
+        'city',
+        'pin_code',
+        'state',
+        'country',
+        'landmark',
+        'credit_day',
+        'credit_amount',
+        'vat_registered',
+        'vat_number',
     ];
 
-    protected $casts = ['vat_registered' => 'boolean'];
+    protected $casts = [
+        'birthdate' => 'date',
+        'credit_amount' => 'decimal:2',
+        'vat_registered' => 'boolean',
+    ];
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
+    }
 
     public function invoices()
     {

@@ -1,4 +1,5 @@
 import { Link, router, usePage } from "@inertiajs/react";
+import { Button } from "antd";
 import {
     LayoutDashboard,
     FileText,
@@ -8,6 +9,9 @@ import {
     Settings,
     LogOut,
     Receipt,
+    Factory,
+    Truck,
+    MapPin,
 } from "lucide-react";
 
 const adminMenu = [
@@ -40,6 +44,24 @@ const adminMenu = [
         href: "/admin/categories",
         icon: Tags,
         active: ["admin/categories"],
+    },
+    {
+        label: "Areas",
+        href: "/admin/areas",
+        icon: MapPin,
+        active: ["admin/areas"],
+    },
+    {
+        label: "Manufacturers",
+        href: "/admin/manufacturers",
+        icon: Factory,
+        active: ["admin/manufacturers"],
+    },
+    {
+        label: "Vendors",
+        href: "/admin/vendors",
+        icon: Truck,
+        active: ["admin/vendors"],
     },
     {
         label: "Settings",
@@ -113,7 +135,7 @@ export default function Sidebar({ collapsed }) {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
                 {menu.map((item) => {
                     const Icon = item.icon;
 
@@ -134,10 +156,9 @@ export default function Sidebar({ collapsed }) {
                                 rounded-lg
                                 transition-all
                                 text-sm
-                                ${
-                                    isActive
-                                        ? "bg-(--primary) text-white"
-                                        : "text-(--text-secondary) hover:text-(--text-primary) hover:bg-[rgba(128,128,128,0.1)]"
+                                ${isActive
+                                    ? "bg-(--primary)! text-white!"
+                                    : "text-(--text-primary)! bg-(--text-primary)/5! hover:text-(--text-primary)! hover:bg-(--text-primary)/20!"
                                 }
                             `}
                             title={collapsed ? item.label : ""}
@@ -172,7 +193,7 @@ export default function Sidebar({ collapsed }) {
                     {!collapsed && (
                         <>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-(--text-primary) truncate mb-1!">
+                                <p className="text-xs font-medium text-(--text-primary) truncate mb-0.5!">
                                     {user?.name}
                                 </p>
 
@@ -181,13 +202,15 @@ export default function Sidebar({ collapsed }) {
                                 </p>
                             </div>
 
-                            <button
+                            <Button
                                 onClick={handleLogout}
-                                className="btn btn-ghost p-1 text-(--text-secondary) hover:text-(--text-primary)"
+                                color="default" variant="filled"
+                                size="small"
+                                className=" text-(--text-secondary) hover:text-(--text-primary)"
                                 title="Logout"
                             >
-                                <LogOut size={16} />
-                            </button>
+                                <LogOut size={14} />
+                            </Button>
                         </>
                     )}
 

@@ -1,3 +1,4 @@
+// resources/js/Layouts/Header.jsx
 import { Layout, Button, Typography, Avatar, Dropdown } from "antd";
 import {
     PanelLeftClose,
@@ -16,14 +17,12 @@ const { Header: AntHeader } = Layout;
 const { Title } = Typography;
 
 export default function Header({ title, collapsed, onToggleSidebar }) {
-    const { theme, setTheme } = useTheme();
+    const { theme, previewTheme } = useTheme();
 
     const toggleTheme = () => {
-        setTheme((prev) => ({
-            ...prev,
-            mode: prev.mode === "dark" ? "light" : "dark",
-        }));
+        previewTheme({ mode: theme.mode === "dark" ? "light" : "dark" });
     };
+
     const items = [
         {
             key: "theme",
@@ -36,9 +35,7 @@ export default function Header({ title, collapsed, onToggleSidebar }) {
             label: "Settings",
             icon: <Settings size={16} />,
         },
-        {
-            type: "divider",
-        },
+        { type: "divider" },
         {
             key: "logout",
             label: "Logout",
@@ -52,13 +49,12 @@ export default function Header({ title, collapsed, onToggleSidebar }) {
             toggleTheme();
             return;
         }
-
-        if (key === "logout") {
-            router.post("/logout");
-        }
-
         if (key === "settings") {
             router.visit("/admin/settings");
+            return;
+        }
+        if (key === "logout") {
+            router.post("/logout");
         }
     };
 
@@ -73,15 +69,15 @@ export default function Header({ title, collapsed, onToggleSidebar }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                position: "absolute",
+                right: 0,
+                top: 0,
+                zIndex: 10,
+                width: "100%"
             }}
         >
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                }}
-            >
+            {/* Left: sidebar toggle + page title */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <Button
                     type="text"
                     onClick={onToggleSidebar}
@@ -93,25 +89,16 @@ export default function Header({ title, collapsed, onToggleSidebar }) {
                         )
                     }
                 />
-
                 <Title
                     level={4}
-                    style={{
-                        margin: 0,
-                        color: "var(--text-primary)",
-                    }}
+                    style={{ margin: 0, color: "var(--text-primary)" }}
                 >
                     {title}
                 </Title>
             </div>
 
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                }}
-            >
+            {/* Right: theme toggle, bell, avatar */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <Button
                     type="text"
                     onClick={toggleTheme}
@@ -127,10 +114,7 @@ export default function Header({ title, collapsed, onToggleSidebar }) {
                 <Button type="text" icon={<Bell size={18} />} />
 
                 <Dropdown
-                    menu={{
-                        items,
-                        onClick: handleMenuClick,
-                    }}
+                    menu={{ items, onClick: handleMenuClick }}
                     trigger={["click"]}
                 >
                     <Avatar

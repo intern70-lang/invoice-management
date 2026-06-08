@@ -25,7 +25,7 @@ export default function AppLayout({ title, children }) {
     useEffect(() => {
         if (flash?.success) {
             api.success({
-                message: "Success",
+                title: "Success",
                 description: flash.success,
                 placement: "topRight",
                 duration: 3,
@@ -33,7 +33,7 @@ export default function AppLayout({ title, children }) {
         }
         if (flash?.error) {
             api.error({
-                message: "Error",
+                title: "Error",
                 description: flash.error,
                 placement: "topRight",
                 duration: 4,
@@ -62,7 +62,8 @@ export default function AppLayout({ title, children }) {
                     top: 0,
                     bottom: 0,
                     background: "var(--bg-secondary)",
-                    borderRight: "1px solid var(--border-color, rgba(128,128,128,0.2))",
+                    borderRight:
+                        "1px solid var(--border-color, rgba(128,128,128,0.2))",
                 }}
             >
                 <Sidebar collapsed={collapsed} />
@@ -73,6 +74,7 @@ export default function AppLayout({ title, children }) {
                     marginLeft: collapsed ? 64 : 240,
                     transition: "all 0.2s ease",
                     background: "var(--bg-primary)",
+                    position: "relative",
                 }}
             >
                 <Header
@@ -84,6 +86,7 @@ export default function AppLayout({ title, children }) {
                 <Content
                     style={{
                         padding: 24,
+                        marginTop: 73,
                         background: "var(--bg-primary)",
                         color: "var(--text-primary)",
                     }}
@@ -94,4 +97,3 @@ export default function AppLayout({ title, children }) {
         </Layout>
     );
 }
-

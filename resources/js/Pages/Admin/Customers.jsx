@@ -19,7 +19,7 @@ import CustomerFormModal from "@/Components/Ui/CustomerFormModal";
 
 const { Text } = Typography;
 
-export default function Customers({ customers }) {
+export default function Customers({ customers, areas = [] }) {
     // ── Modal state ──────────────────────────────────────────────────────────
     const [modalOpen, setModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
@@ -32,7 +32,9 @@ export default function Customers({ customers }) {
         return (
             c.name?.toLowerCase().includes(q) ||
             c.email?.toLowerCase().includes(q) ||
-            c.phone?.toLowerCase().includes(q)
+            c.phone?.toLowerCase().includes(q) ||
+            c.city?.toLowerCase().includes(q) ||
+            c.area?.name?.toLowerCase().includes(q)
         );
     });
 
@@ -106,19 +108,41 @@ export default function Customers({ customers }) {
             key: "customer_type",
             render: (type) => (
                 <Tag
-                    color={type === "business" ? "blue" : "default"}
+                    color={type === "company" ? "blue" : "default"}
                     className="capitalize"
                 >
-                    {type}
+                    {type || "individual"}
                 </Tag>
             ),
         },
         {
-            title: "VAT No.",
-            key: "vat",
+            title: "Area",
+            key: "area",
             render: (_, record) =>
-                record.vat_registered && record.vat_number ? (
-                    <Text code>{record.vat_number}</Text>
+                record.area?.name ? (
+                    <Text type="secondary">{record.area.name}</Text>
+                ) : (
+                    <Text type="secondary">—</Text>
+                ),
+        },
+        {
+            title: "City",
+            dataIndex: "city",
+            key: "city",
+            render: (city) =>
+                city ? (
+                    <Text type="secondary">{city}</Text>
+                ) : (
+                    <Text type="secondary">—</Text>
+                ),
+        },
+        {
+            title: "Credit Limit",
+            dataIndex: "credit_amount",
+            key: "credit_amount",
+            render: (amount) =>
+                amount ? (
+                    <Text type="secondary">{Number(amount).toFixed(2)}</Text>
                 ) : (
                     <Text type="secondary">—</Text>
                 ),
@@ -169,7 +193,7 @@ export default function Customers({ customers }) {
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center">
-                                <Users size={20} />
+                                <Users size={20} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-semibold text-(--text-primary) m-0!">
@@ -226,6 +250,7 @@ export default function Customers({ customers }) {
                     onClose={() => setModalOpen(false)}
                     customer={editingCustomer}
                     mode="page"
+                    areas={areas}
                 />
             </AppLayout>
         </>

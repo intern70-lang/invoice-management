@@ -12,15 +12,29 @@ class CustomerController extends Controller
 {
     public function store(Request $request)
     {
-        $rules = ValidationRules::customer();
-        if ($request->boolean('vat_registered')) {
-            $rules['vat_number'] = ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/', 'max:50'];
-        }
-        $validator = Validator::make($request->all(), $rules, ValidationRules::customerMessages());
+        $validator = Validator::make($request->all(), ValidationRules::customer(), ValidationRules::customerMessages());
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $customer = Customer::create(array_merge($request->all(), ['vat_registered' => $request->boolean('vat_registered')]));
+        $customer = Customer::create([
+            'customer_type' => $request->input('customer_type', 'individual'),
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'gender' => $request->gender,
+            'email' => $request->email,
+            'birthdate' => $request->birthdate,
+            'area_id' => $request->area_id,
+            'shipping_address' => $request->shipping_address,
+            'address' => $request->address,
+            'city' => $request->city,
+            'pin_code' => $request->pin_code,
+            'state' => $request->state,
+            'country' => $request->country,
+            'landmark' => $request->landmark,
+            'credit_day' => $request->credit_day,
+            'credit_amount' => $request->credit_amount,
+        ]);
+
         return response()->json($customer);
     }
 }

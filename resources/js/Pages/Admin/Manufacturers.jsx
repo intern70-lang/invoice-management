@@ -1,20 +1,16 @@
-// resources/js/Pages/Admin/Categories.jsx
-
 import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
     Button,
-    Tag,
     Space,
     Typography,
     Popconfirm,
     Tooltip,
     Input,
-    Switch,
     Badge,
 } from "antd";
 import {
-    TagIcon,
+    Factory,
     Pencil,
     Trash2,
     Search,
@@ -24,48 +20,48 @@ import {
 
 import AppLayout from "@/Layouts/AppLayout";
 import CustomTable from "@/Components/Ui/CustomTable";
-import CategoryFormModal from "@/Components/Ui/CategoryFormModal";
+import ManufacturerFormModal from "@/Components/Ui/ManufacturerFormModal";
 
 const { Text } = Typography;
 
-export default function Categories({ categories }) {
-    // ── Modal state ──────────────────────────────────────────────────────────
+export default function Manufacturers({ manufacturers }) {
     const [modalOpen, setModalOpen] = useState(false);
-    const [editingCategory, setEditingCategory] = useState(null);
-
-    // ── Search / filter ──────────────────────────────────────────────────────
+    const [editingManufacturer, setEditingManufacturer] = useState(null);
     const [search, setSearch] = useState("");
 
-    const filtered = categories.filter((c) =>
-        c.name?.toLowerCase().includes(search.toLowerCase()),
-    );
+    const filtered = manufacturers.filter((manufacturer) => {
+        const term = search.toLowerCase();
+        return (
+            manufacturer.name?.toLowerCase().includes(term) ||
+            manufacturer.number?.toLowerCase().includes(term) ||
+            manufacturer.email?.toLowerCase().includes(term)
+        );
+    });
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
     const openAdd = () => {
-        setEditingCategory(null);
+        setEditingManufacturer(null);
         setModalOpen(true);
     };
 
-    const openEdit = (category) => {
-        setEditingCategory(category);
+    const openEdit = (manufacturer) => {
+        setEditingManufacturer(manufacturer);
         setModalOpen(true);
     };
 
-    const handleToggle = (category) => {
+    const handleToggle = (manufacturer) => {
         router.patch(
-            `/admin/categories/${category.id}/toggle`,
+            `/admin/manufacturers/${manufacturer.id}/toggle`,
             {},
             { preserveScroll: true },
         );
     };
 
-    const handleDelete = (category) => {
-        router.delete(`/admin/categories/${category.id}`, {
+    const handleDelete = (manufacturer) => {
+        router.delete(`/admin/manufacturers/${manufacturer.id}`, {
             preserveScroll: true,
         });
     };
 
-    // ── Table columns ────────────────────────────────────────────────────────
     const columns = [
         {
             title: "#",
@@ -78,7 +74,7 @@ export default function Categories({ categories }) {
             ),
         },
         {
-            title: "Name",
+            title: "Manufacturer",
             dataIndex: "name",
             key: "name",
             render: (name) => (
@@ -89,6 +85,18 @@ export default function Categories({ categories }) {
                     <Text strong>{name}</Text>
                 </div>
             ),
+        },
+        {
+            title: "Number",
+            dataIndex: "number",
+            key: "number",
+            render: (number) => number || <Text type="secondary">-</Text>,
+        },
+        {
+            title: "Email",
+            dataIndex: "email",
+            key: "email",
+            render: (email) => email || <Text type="secondary">-</Text>,
         },
         {
             title: "Status",
@@ -122,7 +130,7 @@ export default function Categories({ categories }) {
                         />
                     </Tooltip>
 
-                    <Tooltip title="Edit Category">
+                    <Tooltip title="Edit Manufacturer">
                         <Button
                             size="small"
                             icon={<Pencil size={13} />}
@@ -131,14 +139,14 @@ export default function Categories({ categories }) {
                     </Tooltip>
 
                     <Popconfirm
-                        title="Delete category?"
+                        title="Delete manufacturer?"
                         description={`Are you sure you want to delete "${record.name}"?`}
                         onConfirm={() => handleDelete(record)}
                         okText="Delete"
                         cancelText="Cancel"
                         okButtonProps={{ danger: true }}
                     >
-                        <Tooltip title="Delete Category">
+                        <Tooltip title="Delete Manufacturer">
                             <Button
                                 size="small"
                                 danger
@@ -151,26 +159,24 @@ export default function Categories({ categories }) {
         },
     ];
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <>
-            <Head title="Categories" />
+            <Head title="Manufacturers" />
 
-            <AppLayout title="Categories">
+            <AppLayout title="Manufacturers">
                 <div className="space-y-5">
-                    {/* Page header */}
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center">
-                                <TagIcon size={20} className="text-white" />
+                                <Factory size={20} className="text-white" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-semibold text-(--text-primary) m-0!">
-                                    Categories
+                                    Manufacturers
                                 </h2>
                                 <p className="text-xs text-(--text-secondary) mt-0.5 m-0!">
-                                    {categories.length} total categor
-                                    {categories.length !== 1 ? "ies" : "y"}
+                                    {manufacturers.length} total manufacturer
+                                    {manufacturers.length !== 1 ? "s" : ""}
                                 </p>
                             </div>
                         </div>
@@ -183,23 +189,22 @@ export default function Categories({ categories }) {
                                         className="text-(--text-secondary)"
                                     />
                                 }
-                                placeholder="Search categories…"
+                                placeholder="Search manufacturers..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 allowClear
-                                style={{ width: 220 }}
+                                style={{ width: 240 }}
                             />
                             <Button
                                 type="primary"
-                                icon={<TagIcon size={15} />}
+                                icon={<Factory size={15} />}
                                 onClick={openAdd}
                             >
-                                Add Category
+                                Add Manufacturer
                             </Button>
                         </div>
                     </div>
 
-                    {/* Table */}
                     <CustomTable
                         columns={columns}
                         data={filtered}
@@ -213,11 +218,10 @@ export default function Categories({ categories }) {
                     />
                 </div>
 
-                {/* Reusable Add / Edit Modal */}
-                <CategoryFormModal
+                <ManufacturerFormModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    category={editingCategory}
+                    manufacturer={editingManufacturer}
                 />
             </AppLayout>
         </>

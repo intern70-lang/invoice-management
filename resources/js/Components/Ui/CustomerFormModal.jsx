@@ -1,17 +1,3 @@
-// resources/js/Components/Ui/CustomerFormModal.jsx
-// Reusable modal for Add / Edit customer.
-// Used on: Customers page & Invoice page (quick-add).
-//
-// Props:
-//  open        – boolean  – controls modal visibility
-//  onClose     – fn       – called when modal should close
-//  customer    – object|null – if provided → edit mode; null → add mode
-//  onSuccess   – fn(customer) – called after a successful submission
-//                               (for invoice page to receive the new record)
-//  mode        – "page" | "quick"
-//                "page"  → uses Inertia router (full page reload after save)
-//                "quick" → fires a JSON fetch (for invoice modal quick-add)
-
 import { useEffect } from "react";
 import { useForm } from "@inertiajs/react";
 import {
@@ -19,16 +5,35 @@ import {
     Form,
     Input,
     Select,
-    Switch,
+    DatePicker,
     Divider,
     Row,
     Col,
-    Typography,
+    InputNumber,
 } from "antd";
 import { UserPlus, UserCheck } from "lucide-react";
+import dayjs from "dayjs";
 
-const { Text } = Typography;
 const { TextArea } = Input;
+
+const initialValues = {
+    customer_type: "individual",
+    name: "",
+    phone: "",
+    gender: null,
+    email: "",
+    birthdate: null,
+    area_id: null,
+    shipping_address: "",
+    address: "",
+    city: "",
+    pin_code: "",
+    state: "",
+    country: "",
+    landmark: "",
+    credit_day: null,
+    credit_amount: null,
+};
 
 export default function CustomerFormModal({
     open,
@@ -36,37 +41,43 @@ export default function CustomerFormModal({
     customer = null,
     onSuccess = null,
     mode = "page",
+    areas = [],
 }) {
     const isEdit = !!customer;
     const [antForm] = Form.useForm();
 
-    // ── Inertia useForm ──────────────────────────────────────────────────────
     const { data, setData, post, put, processing, errors, reset, clearErrors } =
-        useForm({
-            name: "",
-            email: "",
-            phone: "",
-            customer_type: "regular",
-            vat_registered: false,
-            vat_number: "",
-            address: "",
-        });
+        useForm(initialValues);
 
-    // Sync form fields when modal opens or customer changes
     useEffect(() => {
         if (open) {
             const values = {
+                customer_type: customer?.customer_type ?? "individual",
                 name: customer?.name ?? "",
-                email: customer?.email ?? "",
                 phone: customer?.phone ?? "",
-                customer_type: customer?.customer_type ?? "regular",
-                vat_registered: customer?.vat_registered ? true : false,
-                vat_number: customer?.vat_number ?? "",
+                gender: customer?.gender ?? null,
+                email: customer?.email ?? "",
+                birthdate: customer?.birthdate
+                    ? dayjs(customer.birthdate)
+                    : null,
+                area_id: customer?.area_id ?? null,
+                shipping_address: customer?.shipping_address ?? "",
                 address: customer?.address ?? "",
+                city: customer?.city ?? "",
+                pin_code: customer?.pin_code ?? "",
+                state: customer?.state ?? "",
+                country: customer?.country ?? "",
+                landmark: customer?.landmark ?? "",
+                credit_day: customer?.credit_day ?? null,
+                credit_amount: customer?.credit_amount ?? null,
             };
-            // Sync Inertia data
-            Object.entries(values).forEach(([k, v]) => setData(k, v));
-            // Sync Ant Design Form UI
+
+            setData({
+                ...values,
+                birthdate: values.birthdate
+                    ? values.birthdate.format("YYYY-MM-DD")
+                    : null,
+            });
             antForm.setFieldsValue(values);
             clearErrors();
         } else {
@@ -76,32 +87,35 @@ export default function CustomerFormModal({
         }
     }, [open, customer]);
 
-    // Map Inertia server errors → Ant Design field errors
     useEffect(() => {
         if (Object.keys(errors).length > 0) {
-            const fieldErrors = Object.entries(errors).map(([name, msg]) => ({
-                name,
-                errors: [msg],
-            }));
-            antForm.setFields(fieldErrors);
+            antForm.setFields(
+                Object.entries(errors).map(([name, msg]) => ({
+                    name,
+                    errors: [msg],
+                })),
+            );
         }
     }, [errors]);
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
     const handleValuesChange = (changed) => {
-        Object.entries(changed).forEach(([k, v]) => setData(k, v));
+        Object.entries(changed).forEach(([key, value]) => {
+            if (key === "birthdate") {
+                setData(key, value ? value.format("YYYY-MM-DD") : null);
+            } else {
+                setData(key, value);
+            }
+        });
     };
 
     const handleSubmit = async () => {
-        // 1. Run Ant Design client-side validation first
         try {
             await antForm.validateFields();
         } catch {
-            return; // Ant Design will show field errors
+            return;
         }
 
         if (mode === "quick") {
-            // JSON fetch for invoice page
             try {
                 const res = await fetch("/admin/customers/quick", {
                     method: "POST",
@@ -116,13 +130,16 @@ export default function CustomerFormModal({
                 const json = await res.json();
                 if (!res.ok) {
                     if (json.errors) {
-                        const fieldErrors = Object.entries(json.errors).map(
-                            ([name, msgs]) => ({
-                                name,
-                                errors: Array.isArray(msgs) ? msgs : [msgs],
-                            }),
+                        antForm.setFields(
+                            Object.entries(json.errors).map(
+                                ([name, msgs]) => ({
+                                    name,
+                                    errors: Array.isArray(msgs)
+                                        ? msgs
+                                        : [msgs],
+                                }),
+                            ),
                         );
-                        antForm.setFields(fieldErrors);
                     }
                     return;
                 }
@@ -134,7 +151,6 @@ export default function CustomerFormModal({
             return;
         }
 
-        // 2. Inertia full-page submission
         const opts = {
             preserveScroll: true,
             onSuccess: () => {
@@ -154,7 +170,6 @@ export default function CustomerFormModal({
         if (!processing) onClose();
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <Modal
             open={open}
@@ -173,8 +188,8 @@ export default function CustomerFormModal({
                     <span>{isEdit ? "Edit Customer" : "Add Customer"}</span>
                 </div>
             }
-            width={580}
-            destroyOnClose
+            width={820}
+            destroyOnHidden
             maskClosable={!processing}
         >
             <Divider className="my-3!" />
@@ -187,32 +202,50 @@ export default function CustomerFormModal({
                 size="middle"
                 variant="filled"
             >
-                {/* Name */}
-                <Form.Item
-                    label="Full Name"
-                    name="name"
-                    rules={[
-                        { required: true, message: "Full name is required" },
-                        {
-                            pattern: /^[a-zA-Z\s'-]+$/,
-                            message: "Name can only contain letters",
-                        },
-                        {
-                            min: 2,
-                            message: "Name must be at least 2 characters",
-                        },
-                    ]}
-                >
-                    <Input
-                        placeholder="e.g. John Smith"
-                        autoComplete="off"
-                        size="large"
-                    />
-                </Form.Item>
-
-                <Row gutter={16}>
-                    {/* Email */}
-                    <Col span={12}>
+                <Row gutter={12}>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Customer Type" name="customer_type">
+                            <Select
+                                size="large"
+                                options={[
+                                    {
+                                        value: "individual",
+                                        label: "Individual",
+                                    },
+                                    { value: "company", label: "Company" },
+                                ]}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                        <Form.Item
+                            label="Full Name"
+                            name="name"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Full name is required",
+                                },
+                                {
+                                    pattern: /^[a-zA-Z\s'-\.]+$/,
+                                    message:
+                                        "Name can only contain letters, spaces, apostrophes, dots and hyphens",
+                                },
+                                {
+                                    min: 2,
+                                    message:
+                                        "Name must be at least 2 characters",
+                                },
+                            ]}
+                        >
+                            <Input
+                                placeholder="e.g. John Smith"
+                                autoComplete="off"
+                                size="large"
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
                         <Form.Item
                             label="Email"
                             name="email"
@@ -234,113 +267,145 @@ export default function CustomerFormModal({
                             />
                         </Form.Item>
                     </Col>
+                </Row>
 
-                    {/* Phone */}
-                    <Col span={12}>
+                <Row gutter={12}>
+                    <Col xs={24} md={8}>
                         <Form.Item
                             label="Phone"
                             name="phone"
                             rules={[
                                 {
-                                    pattern: /^[+\d\s\-()]{7,15}$/,
-                                    message: "Enter a valid phone number",
+                                    pattern: /^[\d\s\+\-\(\)]+$/,
+                                    message:
+                                        "Digits, spaces, +, - and parentheses only",
                                 },
                             ]}
                         >
-                            <Input
-                                placeholder="+44 7700 000000"
-                                autoComplete="off"
-                                maxLength={15}
-                                size="large"
+                            <Input placeholder="+44 7700 000000" />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Gender" name="gender">
+                            <Select
+                                allowClear
+                                placeholder="Select gender"
+                                options={[
+                                    { value: "male", label: "Male" },
+                                    { value: "female", label: "Female" },
+                                    { value: "other", label: "Other" },
+                                ]}
                             />
                         </Form.Item>
                     </Col>
-                </Row>
-
-                <Row gutter={16}>
-                    {/* Customer Type */}
-                    <Col span={12}>
-                        <Form.Item
-                            label="Customer Type"
-                            name="customer_type"
-                            rules={[
-                                { required: true, message: "Type is required" },
-                            ]}
-                        >
-                            <Select size="large">
-                                <Select.Option value="regular">
-                                    Regular
-                                </Select.Option>
-                                <Select.Option value="business">
-                                    Business
-                                </Select.Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
-
-                    {/* VAT Registered */}
-                    <Col span={12}>
-                        <Form.Item
-                            label="VAT Registered"
-                            name="vat_registered"
-                            valuePropName="checked"
-                        >
-                            <Switch
-                                size="large"
-                                checkedChildren="Yes"
-                                unCheckedChildren="No"
-                                onChange={(val) =>
-                                    setData("vat_registered", val)
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Birthdate" name="birthdate">
+                            <DatePicker
+                                className="w-full"
+                                disabledDate={(date) =>
+                                    date && date.isAfter(dayjs(), "day")
                                 }
                             />
                         </Form.Item>
                     </Col>
                 </Row>
 
-                {/* VAT Number – conditionally shown */}
-                <Form.Item
-                    noStyle
-                    shouldUpdate={(prev, curr) =>
-                        prev.vat_registered !== curr.vat_registered
-                    }
-                >
-                    {({ getFieldValue }) =>
-                        getFieldValue("vat_registered") ? (
-                            <Form.Item
-                                label="VAT Number"
-                                name="vat_number"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "VAT number is required",
-                                    },
-                                    {
-                                        pattern: /^[a-zA-Z0-9]+$/,
-                                        message:
-                                            "VAT number must be alphanumeric",
-                                    },
-                                    { max: 17, message: "Max 17 characters" },
-                                ]}
-                            >
-                                <Input
-                                    placeholder="GB123456789"
-                                    autoComplete="off"
-                                    maxLength={17}
-                                    size="large"
-                                />
-                            </Form.Item>
-                        ) : null
-                    }
-                </Form.Item>
+                <Row gutter={12}>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Area" name="area_id">
+                            <Select
+                                allowClear
+                                showSearch
+                                placeholder="Select area"
+                                optionFilterProp="label"
+                                options={areas.map((area) => ({
+                                    value: area.id,
+                                    label: area.name,
+                                }))}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Credit Day" name="credit_day">
+                            <InputNumber
+                                min={0}
+                                max={9999}
+                                precision={0}
+                                className="w-full"
+                                placeholder="e.g. 30"
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Credit Limit" name="credit_amount">
+                            <InputNumber
+                                min={0}
+                                precision={2}
+                                className="w-full"
+                                placeholder="0.00"
+                            />
+                        </Form.Item>
+                    </Col>
+                </Row>
 
-                {/* Address */}
-                <Form.Item label="Address" name="address">
-                    <TextArea
-                        rows={2}
-                        placeholder="Street, City, Postcode"
-                        className="resize-none"
-                    />
-                </Form.Item>
+                <Row gutter={12}>
+                    <Col xs={24} md={12}>
+                        <Form.Item label="Address" name="address">
+                            <TextArea
+                                rows={3}
+                                maxLength={500}
+                                showCount
+                                placeholder="Billing or primary address"
+                                className="resize-none"
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                        <Form.Item
+                            label="Shipping Address"
+                            name="shipping_address"
+                        >
+                            <TextArea
+                                rows={3}
+                                maxLength={500}
+                                showCount
+                                placeholder="Shipping address"
+                                className="resize-none"
+                            />
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                <Row gutter={12}>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="City" name="city">
+                            <Input placeholder="City" />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="Pin Code" name="pin_code">
+                            <Input placeholder="Pin code" />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                        <Form.Item label="State" name="state">
+                            <Input placeholder="State" />
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                <Row gutter={12}>
+                    <Col xs={24} md={12}>
+                        <Form.Item label="Country" name="country">
+                            <Input placeholder="Country" />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                        <Form.Item label="Landmark" name="landmark">
+                            <Input placeholder="Nearby landmark" />
+                        </Form.Item>
+                    </Col>
+                </Row>
             </Form>
         </Modal>
     );

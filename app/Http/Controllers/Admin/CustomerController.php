@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Area;
 use App\Models\Customer;
 use App\Services\ValidationRules;
 use Illuminate\Http\Request;
@@ -12,41 +13,29 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::latest()->get();
+        $customers = Customer::with('area')->latest()->get();
+        $areas = Area::where('is_active', true)->orderBy('name')->get();
 
         return Inertia::render('Admin/Customers', [
             'customers' => $customers,
+            'areas' => $areas,
         ]);
     }
 
     public function store(Request $request)
     {
-        $rules = ValidationRules::customer();
-        if ($request->boolean('vat_registered')) {
-            $rules['vat_number'] = ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/', 'max:50'];
-        }
-        $request->validate($rules, ValidationRules::customerMessages());
+        $request->validate(ValidationRules::customer(), ValidationRules::customerMessages());
 
-        Customer::create(array_merge(
-            $request->all(),
-            ['vat_registered' => $request->boolean('vat_registered')]
-        ));
+        Customer::create($this->customerPayload($request));
 
         return back()->with('success', 'Customer "' . $request->name . '" created successfully.');
     }
 
     public function update(Request $request, Customer $customer)
     {
-        $rules = ValidationRules::customer();
-        if ($request->boolean('vat_registered')) {
-            $rules['vat_number'] = ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/', 'max:50'];
-        }
-        $request->validate($rules, ValidationRules::customerMessages());
+        $request->validate(ValidationRules::customer(), ValidationRules::customerMessages());
 
-        $customer->update(array_merge(
-            $request->all(),
-            ['vat_registered' => $request->boolean('vat_registered')]
-        ));
+        $customer->update($this->customerPayload($request));
 
         return back()->with('success', 'Customer "' . $request->name . '" updated successfully.');
     }
@@ -62,14 +51,9 @@ class CustomerController extends Controller
     // Quick store via JSON (from invoice page quick-add modal)
     public function quickStore(Request $request)
     {
-        $rules = ValidationRules::customer();
-        if ($request->boolean('vat_registered')) {
-            $rules['vat_number'] = ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/', 'max:50'];
-        }
-
         $validator = \Illuminate\Support\Facades\Validator::make(
             $request->all(),
-            $rules,
+            ValidationRules::customer(),
             ValidationRules::customerMessages()
         );
 
@@ -77,11 +61,31 @@ class CustomerController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $customer = Customer::create(array_merge(
-            $request->all(),
-            ['vat_registered' => $request->boolean('vat_registered')]
-        ));
+        $customer = Customer::create($this->customerPayload($request));
+        $customer->load('area');
 
         return response()->json($customer);
+    }
+
+    private function customerPayload(Request $request): array
+    {
+        return [
+            'customer_type' => $request->input('customer_type', 'individual'),
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'gender' => $request->gender,
+            'email' => $request->email,
+            'birthdate' => $request->birthdate,
+            'area_id' => $request->area_id,
+            'shipping_address' => $request->shipping_address,
+            'address' => $request->address,
+            'city' => $request->city,
+            'pin_code' => $request->pin_code,
+            'state' => $request->state,
+            'country' => $request->country,
+            'landmark' => $request->landmark,
+            'credit_day' => $request->credit_day,
+            'credit_amount' => $request->credit_amount,
+        ];
     }
 }

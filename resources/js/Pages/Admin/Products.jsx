@@ -11,6 +11,7 @@ import {
     Tooltip,
     Input,
     Badge,
+    Avatar,
 } from "antd";
 import {
     PackagePlus,
@@ -28,7 +29,7 @@ import ProductFormModal from "@/Components/Ui/ProductFormModal";
 
 const { Text } = Typography;
 
-export default function Products({ products, categories }) {
+export default function Products({ products, categories, manufacturers = [] }) {
     // ── Modal state ──────────────────────────────────────────────────────────
     const [modalOpen, setModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
@@ -40,10 +41,15 @@ export default function Products({ products, categories }) {
         const q = search.toLowerCase();
         return (
             p.name?.toLowerCase().includes(q) ||
+            p.item_code?.toLowerCase().includes(q) ||
             p.category?.name?.toLowerCase().includes(q) ||
+            p.manufacturer?.name?.toLowerCase().includes(q) ||
+            p.regional_name?.toLowerCase().includes(q) ||
             p.description?.toLowerCase().includes(q)
         );
     });
+
+    console.log("Filtered products:", filtered);
 
     // ── Handlers ─────────────────────────────────────────────────────────────
     const openAdd = () => {
@@ -88,13 +94,25 @@ export default function Products({ products, categories }) {
             title: "Product",
             key: "name",
             render: (_, record) => (
-                <div>
-                    <Text strong>{record.name}</Text>
-                    {record.description && (
-                        <p className="text-xs text-(--text-secondary) m-0 mt-0.5 max-w-xs truncate">
-                            {record.description}
+                <div className="flex items-center gap-3">
+                    <Avatar
+                        shape="square"
+                        size={42}
+                        src={record.image ? `/${record.image}` : null}
+                        icon={!record.image ? <Package size={18} /> : null}
+                    />
+                    <div className="min-w-0">
+                        <Text strong>{record.name}</Text>
+                        <p className="text-xs text-(--text-secondary) m-0 mt-0.5">
+                            {record.item_code || "No code"}
+                            {record.regional_name ? ` · ${record.regional_name}` : ""}
                         </p>
-                    )}
+                        {record.description && (
+                            <p className="text-xs text-(--text-secondary) m-0 mt-0.5 max-w-xs truncate">
+                                {record.description}
+                            </p>
+                        )}
+                    </div>
                 </div>
             ),
         },
@@ -109,20 +127,44 @@ export default function Products({ products, categories }) {
                 ),
         },
         {
-            title: "Purchase",
-            dataIndex: "purchase_price",
-            key: "purchase_price",
-            align: "right",
-            render: (price) => (
-                <Text type="secondary">£{Number(price).toFixed(2)}</Text>
+            title: "Manufacturer",
+            key: "manufacturer",
+            render: (_, record) =>
+                record.manufacturer ? (
+                    <Text>{record.manufacturer.name}</Text>
+                ) : (
+                    <Text type="secondary">—</Text>
+                ),
+        },
+        {
+            title: "Class",
+            dataIndex: "item_class",
+            key: "item_class",
+            render: (value) => (
+                <Tag>
+                    {{
+                        general: "General",
+                        sale_only: "Sale Only",
+                        raw_material: "Raw Material",
+                    }[value] || value}
+                </Tag>
             ),
         },
         {
-            title: "Selling",
-            dataIndex: "selling_price",
-            key: "selling_price",
+            title: "Prices",
+            key: "prices",
             align: "right",
-            render: (price) => <Text strong>£{Number(price).toFixed(2)}</Text>,
+            render: (_, record) => (
+                <div>
+                    <Text type="secondary">
+                        Buy £{Number(record.purchase_price).toFixed(2)}
+                    </Text>
+                    <br />
+                    <Text strong>
+                        Sale £{Number(record.selling_price).toFixed(2)}
+                    </Text>
+                </div>
+            ),
         },
         {
             title: "Qty",
@@ -268,6 +310,7 @@ export default function Products({ products, categories }) {
                     onClose={() => setModalOpen(false)}
                     product={editingProduct}
                     categories={categories}
+                    manufacturers={manufacturers}
                 />
             </AppLayout>
         </>

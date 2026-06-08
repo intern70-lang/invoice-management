@@ -9,7 +9,7 @@ export default function CustomTable({
 }) {
     return (
         <div
-            className={`bg-(--bg-table) border border-(--border-color,rgba(128,128,128,0.2)) rounded-xl card p-2 ${className}`}
+            className={`bg-(--bg-table) border whitespace-nowrap border-(--border-color,rgba(128,128,128,0.2)) rounded-xl card p-2 ${className}`}
         >
             <Table
                 columns={columns}
@@ -17,6 +17,7 @@ export default function CustomTable({
                 rowKey={rowKey}
                 pagination={pagination}
                 className="w-full"
+                scroll={{ x: 'calc(700px + 50%)' }}
             />
         </div>
     );
