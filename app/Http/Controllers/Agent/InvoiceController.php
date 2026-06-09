@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\SystemSetting;
+use Inertia\Inertia;
 use App\Services\ValidationRules;
 use Illuminate\Http\Request;
 
@@ -14,15 +15,55 @@ class InvoiceController extends Controller
 {
     public function index()
     {
-        $invoices = Invoice::with('customer')->where('created_by', auth()->id())->latest()->get();
-        return view('agent.invoices.index', compact('invoices'));
+        $invoices = Invoice::with('customer')
+            ->where('created_by', auth()->id())
+            ->latest()
+            ->get();
+        return inertia('Agent/Invoices', compact('invoices'));
     }
+
+    public function updateStatus(Request $request, Invoice $invoice)
+    {
+        abort_if($invoice->created_by !== auth()->id(), 403);
+
+        $request->validate([
+            'status' => ['required', 'in:paid,unpaid'],
+        ]);
+
+        $invoice->update([
+            'status' => $request->input('status'),
+        ]);
+
+        return redirect()->back()->with(
+            'toast_success',
+            "Invoice {$invoice->invoice_number} status updated successfully."
+        );
+    }
+
+    public function destroy(Invoice $invoice)
+    {
+        abort_if($invoice->created_by !== auth()->id(), 403);
+
+        $number = $invoice->invoice_number;
+        $invoice->delete();
+
+        return redirect()->back()->with(
+            'toast_success',
+            "Invoice {$number} deleted."
+        );
+    }
+
 
     public function create()
     {
         $customers = Customer::orderBy('name')->get();
         $products  = Product::where('is_active', true)->orderBy('name')->get();
-        return view('agent.invoices.create', compact('customers', 'products'));
+        return inertia('Agent/CreateInvoice', [
+            'customers' => $customers,
+            'products' => $products,
+            'areas' => [],
+            'settings' => SystemSetting::get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -64,7 +105,7 @@ class InvoiceController extends Controller
         }
         $invoice->update(['total_vat' => $totalVat, 'total_amount' => $totalAmount]);
         return redirect()->route('agent.invoices.show', $invoice)
-            ->with('toast_success', 'Invoice <strong>' . $invoice->invoice_number . '</strong> saved successfully.');
+            ->with('toast_success', 'Invoice' . $invoice->invoice_number . 'saved successfully.');
     }
 
     public function show(Invoice $invoice)
@@ -72,7 +113,8 @@ class InvoiceController extends Controller
         abort_if($invoice->created_by !== auth()->id(), 403);
         $invoice->load('customer', 'items.product', 'creator');
         $settings = SystemSetting::get();
-        return view('agent.invoices.show', compact('invoice', 'settings'));
+        $invoice->currency_symbol = $settings['currency_symbol'] ?? ($settings->currency_symbol ?? '£');
+        return inertia('Agent/ShowInvoice', compact('invoice', 'settings'));
     }
 
     public function customerData(Customer $customer)

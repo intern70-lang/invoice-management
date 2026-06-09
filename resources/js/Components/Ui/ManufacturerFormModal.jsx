@@ -98,7 +98,7 @@ export default function ManufacturerFormModal({
                 </div>
             }
             width={620}
-            destroyOnClose
+            destroyOnHidden
             maskClosable={!processing}
         >
             <Divider className="my-3!" />
@@ -107,7 +107,6 @@ export default function ManufacturerFormModal({
                 form={antForm}
                 layout="vertical"
                 onValuesChange={handleValuesChange}
-                requiredMark="optional"
                 size="middle"
                 variant="filled"
             >
@@ -159,17 +158,9 @@ export default function ManufacturerFormModal({
                             maxLength={15}
                             rules={[
                                 {
-                                    pattern: /^[\d\s\+\-\(\)]+$/,
+                                    pattern: /^(?:\+92|92|0)?3\d{9}$/,
                                     message:
-                                        "Digits, spaces, +, - and parentheses only",
-                                },
-                                {
-                                    min: 10,
-                                    message: "Number must be at least 10 characters",
-                                },
-                                {
-                                    max: 15,
-                                    message: "Number cannot exceed 15 characters",
+                                        "Enter a valid mobile number (03XXXXXXXXX)",
                                 },
                             ]}
                         >
@@ -181,6 +172,10 @@ export default function ManufacturerFormModal({
                             label="Email"
                             name="email"
                             rules={[
+                                {
+                                    required: true,
+                                    message: "Manufacturer name is required",
+                                },
                                 {
                                     type: "email",
                                     message: "Enter a valid email address",

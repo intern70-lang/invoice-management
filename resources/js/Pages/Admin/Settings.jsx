@@ -60,13 +60,13 @@ export default function Settings({ settings }) {
     const [fileList, setFileList] = useState(
         settings?.logo
             ? [
-                  {
-                      uid: "-1",
-                      name: "logo",
-                      status: "done",
-                      url: `/storage/${settings.logo}`,
-                  },
-              ]
+                {
+                    uid: "-1",
+                    name: "logo",
+                    status: "done",
+                    url: `/storage/${settings.logo}`,
+                },
+            ]
             : [],
     );
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -189,7 +189,6 @@ export default function Settings({ settings }) {
                     form={form}
                     layout="vertical"
                     onValuesChange={handleValuesChange}
-                    requiredMark="optional"
                     variant="filled"
                 >
                     {/* ── Application Info ── */}
@@ -222,7 +221,7 @@ export default function Settings({ settings }) {
                                         },
                                     ]}
                                 >
-                                    <Input size="large" />
+                                    <Input size="large" placeholder="Enter App Name" />
                                 </Form.Item>
                             </Col>
 
@@ -237,7 +236,7 @@ export default function Settings({ settings }) {
                                         },
                                     ]}
                                 >
-                                    <Input size="large" />
+                                    <Input size="large" placeholder="Enter Email Address" />
                                 </Form.Item>
                             </Col>
 
@@ -253,7 +252,7 @@ export default function Settings({ settings }) {
                                         },
                                     ]}
                                 >
-                                    <Input size="large" />
+                                    <Input size="large" placeholder="Enter Phone Number" />
                                 </Form.Item>
                             </Col>
 
@@ -272,6 +271,7 @@ export default function Settings({ settings }) {
                                         size="large"
                                         options={currencies}
                                         onChange={handleCurrencyChange}
+                                        placeholder="Select Currency"
                                     />
                                 </Form.Item>
                             </Col>
@@ -287,7 +287,7 @@ export default function Settings({ settings }) {
                                         },
                                     ]}
                                 >
-                                    <TextArea rows={3} />
+                                    <TextArea rows={3} placeholder="Enter Address" />
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -522,7 +522,7 @@ export default function Settings({ settings }) {
                                         },
                                     ]}
                                 >
-                                    <Input size="large" />
+                                    <Input size="large" placeholder="Enter Bank Name" />
                                 </Form.Item>
                             </Col>
 
@@ -535,9 +535,13 @@ export default function Settings({ settings }) {
                                             pattern: /^[A-Z0-9\s]*$/,
                                             message: "Enter a valid IBAN",
                                         },
+                                        {
+                                            max: 24,
+                                            message: "IBAN cannot exceed 24 characters",
+                                        }
                                     ]}
                                 >
-                                    <Input size="large" />
+                                    <Input size="large" placeholder="Enter IBAN" />
                                 </Form.Item>
                             </Col>
 
@@ -547,12 +551,16 @@ export default function Settings({ settings }) {
                                     name="swift_code"
                                     rules={[
                                         {
-                                            pattern: /^[A-Za-z0-9]*$/,
+                                            pattern: /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i,
                                             message: "Enter a valid SWIFT code",
                                         },
+                                        {
+                                            max: 11,
+                                            message: "SWIFT / BIC cannot exceed 11 characters",
+                                        }
                                     ]}
                                 >
-                                    <Input size="large" />
+                                    <Input size="large" placeholder="Enter SWIFT / BIC" />
                                 </Form.Item>
                             </Col>
                         </Row>

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Validation\Rule;
+
 /**
  * Central place for all validation rules.
  * Controllers and FormRequests both use this.
@@ -129,25 +131,25 @@ class ValidationRules
         return [
             'image'                  => ['nullable', 'mimes:png,jpg,jpeg,webp', 'max:5120'],
             'name'                   => ['required', 'string', 'regex:/^[a-zA-Z0-9\s\-\(\)]+$/', 'min:2', 'max:255'],
-            'item_code'              => ['required', 'string', 'regex:/^[a-zA-Z0-9\-\_\/]+$/', 'max:100', $itemCodeUniqueRule],
+            'item_code'              => ['nullable', 'string', 'regex:/^[a-zA-Z0-9\-\_\/]+$/', 'max:100', $itemCodeUniqueRule],
             'description'            => ['nullable', 'string', 'max:1000'],
             'category_id'            => ['required', 'integer', 'exists:categories,id'],
-            'manufacturer_id'        => ['required', 'integer', 'exists:manufacturers,id'],
-            'item_class'             => ['required', 'in:general,sale_only,raw_material'],
+            'manufacturer_id'        => ['nullable', 'integer', 'exists:manufacturers,id'],
+            'item_class'             => ['nullable', 'in:general,sale_only,raw_material'],
             'hsn_code'               => ['nullable', 'string', 'regex:/^[a-zA-Z0-9\-\s]+$/', 'max:50'],
             'regional_name'          => ['nullable', 'string', 'max:255'],
-            'unit'                   => ['required', 'string', 'max:50'],
-            'qty'                    => ['required', 'integer', 'min:0', 'max:999999'],
-            'purchase_price'         => ['required', 'numeric', 'min:0', 'max:9999999', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'unit'                   => ['nullable', 'string', 'max:50'],
+            'qty'                    => ['nullable', 'integer', 'min:0', 'max:999999'],
+            'purchase_price'         => ['nullable', 'numeric', 'min:0', 'max:9999999', 'regex:/^\d+(\.\d{1,2})?$/'],
             'purchase_tax_inclusive' => ['boolean'],
-            'selling_price'          => ['required', 'numeric', 'min:0', 'max:9999999', 'regex:/^\d+(\.\d{1,2})?$/', 'gte:purchase_price'],
-            'vat'                    => ['required', 'numeric', 'min:0', 'max:100'],
+            'selling_price'          => ['nullable', 'numeric', 'min:0', 'max:9999999', 'regex:/^\d+(\.\d{1,2})?$/', 'gte:purchase_price'],
+            'vat'                    => ['nullable', 'numeric', 'min:0', 'max:100'],
             'sale_tax_inclusive'     => ['boolean'],
             'discount_percent'       => ['nullable', 'numeric', 'min:0', 'max:100'],
             'cess_percent'           => ['nullable', 'numeric', 'min:0', 'max:100'],
             'additional_cess'        => ['nullable', 'numeric', 'min:0', 'max:9999999'],
             'is_weighing_item'       => ['boolean'],
-            'moq'                    => ['required', 'integer', 'min:1', 'max:999999'],
+            'moq'                    => ['nullable', 'integer', 'min:0', 'max:999999'],
         ];
     }
 
@@ -188,14 +190,21 @@ class ValidationRules
 
     // ── Customer ──────────────────────────────────────────────────────────────
 
-    public static function customer(): array
+    public static function customer(?int $ignoreId = null): array
     {
         return [
             'customer_type'    => ['nullable', 'in:individual,company'],
             'name'             => ['required', 'string', 'regex:/^[a-zA-Z\s\-\'\.]+$/', 'min:2', 'max:255'],
             'phone'            => ['nullable', 'string', 'regex:/^[\d\s\+\-\(\)]+$/', 'max:30'],
             'gender'           => ['nullable', 'in:male,female,other'],
-            'email'            => ['required', 'email', 'max:255'],
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                $ignoreId
+                    ? Rule::unique('customers', 'email')->ignore($ignoreId)
+                    : Rule::unique('customers', 'email')
+            ],
             'birthdate'        => ['nullable', 'date', 'before_or_equal:today'],
             'area_id'          => ['nullable', 'integer', 'exists:areas,id'],
             'shipping_address' => ['nullable', 'string', 'max:500'],
@@ -218,6 +227,7 @@ class ValidationRules
             'name.min'         => 'Name must be at least 2 characters.',
             'email.required'   => 'Email is required.',
             'email.email'      => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already registered.',
             'phone.regex'      => 'Phone may only contain digits, spaces, +, - and parentheses.',
             'birthdate.before_or_equal' => 'Birthdate cannot be in the future.',
             'area_id.exists'   => 'Selected area is invalid.',

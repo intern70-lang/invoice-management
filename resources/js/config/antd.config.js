@@ -1,15 +1,3 @@
-// resources/js/config/antd.config.js
-//
-// AntD v6 key findings from official docs:
-//
-// - Button `type="primary"` is syntactic sugar for color="primary" variant="solid"
-// - color="primary" uses AntD's PRESET primary color scale, NOT colorPrimary token directly
-// - To theme buttons with a custom color, use Button component tokens:
-//   solidBg, solidHoverBg, solidActiveBg → control solid button background
-//   primaryShadow → remove the default colored shadow
-// - colorPrimary seed token still affects: Switch, Checkbox, Radio, Select focus,
-//   DatePicker, Pagination, Progress, etc. — just NOT Button solid bg in v6
-
 import { theme } from "antd";
 
 export const getAntdThemeConfig = (appTheme) => {
@@ -43,7 +31,7 @@ export const getAntdThemeConfig = (appTheme) => {
             colorLink: secondary,
 
             // Backgrounds
-            // colorBgBase: isDark ? "#030712" : "#ffffff",
+            colorBgBase: isDark ? "#141414" : "#F5F6F6",
             colorBgContainer: isDark ? "#141414" : "#ffffff",
             // colorBgElevated: isDark ? "#1f2937" : "#ffffff",
             // colorBgLayout: isDark ? "#030712" : "#f5f5f5",
@@ -78,8 +66,18 @@ export const getAntdThemeConfig = (appTheme) => {
                 algorithm: true,
             },
 
+            Switch: {
+                colorPrimary: secondary,      // base token for derivation
+                solidBg: secondary,      // solid button background ✅
+                solidHoverBg: hoverBg,        // hover state
+                solidActiveBg: activeBg,       // active/pressed state
+                primaryShadow: "none",         // remove colored glow shadow
+                primaryColor: "#ffffff",      // text on primary solid button
+                algorithm: true,
+            },
+
             // ── Other interactive components ─────────────────────────────────
-            Switch: { algorithm: true },
+            // Switch: { algorithm: true },
             Checkbox: { algorithm: true },
             Radio: { algorithm: true },
             Select: { algorithm: true, variant: "filled" },

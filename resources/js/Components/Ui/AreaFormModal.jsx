@@ -78,7 +78,7 @@ export default function AreaFormModal({
         <Modal
             open={open}
             onCancel={handleCancel}
-            onOk={handleSubmit}
+        onOk={handleSubmit}
             okText={isEdit ? "Update Area" : "Save Area"}
             cancelText="Cancel"
             confirmLoading={processing}
@@ -89,7 +89,7 @@ export default function AreaFormModal({
                 </div>
             }
             width={420}
-            destroyOnClose
+            destroyOnHidden
             maskClosable={!processing}
         >
             <Divider className="my-3!" />

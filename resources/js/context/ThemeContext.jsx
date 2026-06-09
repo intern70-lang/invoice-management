@@ -1,21 +1,13 @@
 // resources/js/context/ThemeContext.jsx
-//
-// Accepts initialSettings from app.jsx (bootstrapped from Inertia page props).
-// After that, syncFromSettings() is called on save success to update the app.
-// previewTheme() gives instant DOM updates while editing in Settings.jsx.
-// Header.jsx uses previewTheme({ mode }) for the quick toggle button.
-
 import {
     createContext,
     useContext,
-    useEffect,
     useState,
     useCallback,
 } from "react";
 
 const ThemeContext = createContext();
 
-// ── DOM helpers ───────────────────────────────────────────────────────────────
 function applyToDom({ mode, primaryColor, secondaryColor }) {
     const root = document.documentElement;
     root.setAttribute("data-theme", mode);
@@ -29,7 +21,6 @@ function persist({ mode, primaryColor, secondaryColor }) {
     localStorage.setItem("secondary-color", secondaryColor);
 }
 
-// ── Map raw settings object → theme shape ─────────────────────────────────────
 function fromSettings(settings) {
     return {
         mode:
@@ -51,7 +42,6 @@ function fromSettings(settings) {
     };
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
 export function ThemeProvider({ children, initialSettings }) {
     const [theme, setThemeState] = useState(() => {
         const t = fromSettings(initialSettings);
@@ -60,7 +50,6 @@ export function ThemeProvider({ children, initialSettings }) {
         return t;
     });
 
-    // Called by Settings.jsx after a successful save — updates whole app
     const syncFromSettings = useCallback((settings) => {
         const t = fromSettings(settings);
         setThemeState(t);
@@ -68,19 +57,18 @@ export function ThemeProvider({ children, initialSettings }) {
         persist(t);
     }, []);
 
-    // Live preview while the user edits (instant, before saving)
+    // Now also persists so refresh keeps the toggled mode
     const previewTheme = useCallback((patch) => {
         setThemeState((prev) => {
             const next = { ...prev, ...patch };
             applyToDom(next);
+            persist(next);       // ← was missing
             return next;
         });
     }, []);
 
     return (
-        <ThemeContext.Provider
-            value={{ theme, syncFromSettings, previewTheme }}
-        >
+        <ThemeContext.Provider value={{ theme, syncFromSettings, previewTheme }}>
             {children}
         </ThemeContext.Provider>
     );

@@ -110,7 +110,7 @@ export default function VendorFormModal({
                 </div>
             }
             width={760}
-            destroyOnClose
+            destroyOnHidden
             maskClosable={!processing}
         >
             <Divider className="my-3!" />
@@ -134,19 +134,17 @@ export default function VendorFormModal({
                                     message: "Vendor name is required",
                                 },
                                 {
-                                    pattern: /^[a-zA-Z0-9\s\-]+$/,
+                                    pattern: /^[A-Za-z\s.,]+$/,
                                     message:
-                                        "Letters, numbers, spaces and hyphens only",
+                                        "Name can only contain letters, spaces, dots (.) and commas (,)",
                                 },
                                 {
                                     min: 2,
-                                    message:
-                                        "Name must be at least 2 characters",
+                                    message: "Name must be at least 2 characters",
                                 },
                                 {
                                     max: 100,
-                                    message:
-                                        "Name cannot exceed 100 characters",
+                                    message: "Name cannot exceed 100 characters",
                                 },
                             ]}
                         >
@@ -155,23 +153,30 @@ export default function VendorFormModal({
                                 autoComplete="off"
                                 size="large"
                                 onChange={(e) => {
-                                    const sanitized = e.target.value.replace(
-                                        /[^a-zA-Z0-9\s\-]/g,
-                                        "",
-                                    );
-                                    if (sanitized !== e.target.value) {
-                                        antForm.setFieldValue(
-                                            "name",
-                                            sanitized,
-                                        );
-                                        setData("name", sanitized);
-                                    }
+                                    const sanitized = e.target.value.replace(/[^A-Za-z\s.,]/g, "");
+                                    antForm.setFieldValue("name", sanitized);
+                                    setData("name", sanitized);
                                 }}
                             />
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                        <Form.Item label="Company" name="company">
+                        <Form.Item label="Company" name="company"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Company name is required",
+                                },
+                                {
+                                    min: 2,
+                                    message: "Company name must be at least 2 characters",
+                                },
+                                {
+                                    max: 150,
+                                    message: "Company name cannot exceed 150 characters",
+                                },
+                            ]}
+                        >
                             <Input placeholder="Company name" size="large" />
                         </Form.Item>
                     </Col>
@@ -184,9 +189,9 @@ export default function VendorFormModal({
                             name="phone"
                             rules={[
                                 {
-                                    pattern: /^[\d\s\+\-\(\)]+$/,
+                                    pattern: /^(?:\+92|92|0)?3\d{9}$/,
                                     message:
-                                        "Digits, spaces, +, - and parentheses only",
+                                        "Enter a valid mobile number (03XXXXXXXXX)",
                                 },
                             ]}
                         >
@@ -199,8 +204,16 @@ export default function VendorFormModal({
                             name="email"
                             rules={[
                                 {
+                                    required: true,
+                                    message: "Email is required",
+                                },
+                                {
                                     type: "email",
                                     message: "Enter a valid email address",
+                                },
+                                {
+                                    max: 255,
+                                    message: "Email cannot exceed 255 characters",
                                 },
                             ]}
                         >
@@ -214,9 +227,17 @@ export default function VendorFormModal({
                     name="tax_reg_number"
                     rules={[
                         {
-                            pattern: /^[a-zA-Z0-9\-\s]+$/,
+                            min: 3,
+                            message: "Tax registration number is too short",
+                        },
+                        {
+                            max: 50,
+                            message: "Tax registration number cannot exceed 50 characters",
+                        },
+                        {
+                            pattern: /^[A-Za-z0-9\s-]+$/,
                             message:
-                                "Letters, numbers, spaces and hyphens only",
+                                "Only letters, numbers, spaces and hyphens are allowed",
                         },
                     ]}
                 >
@@ -225,12 +246,26 @@ export default function VendorFormModal({
 
                 <Row gutter={12}>
                     <Col xs={24} md={12}>
-                        <Form.Item label="Address Line 1" name="address_line_1">
+                        <Form.Item label="Address Line 1" name="address_line_1"
+                            rules={[
+                                {
+                                    max: 255,
+                                    message: "Address cannot exceed 255 characters",
+                                },
+                            ]}
+                        >
                             <Input placeholder="Street address" />
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                        <Form.Item label="Address Line 2" name="address_line_2">
+                        <Form.Item label="Address Line 2" name="address_line_2"
+                            rules={[
+                                {
+                                    max: 255,
+                                    message: "Address cannot exceed 255 characters",
+                                },
+                            ]}
+                        >
                             <Input placeholder="Apartment, suite, building" />
                         </Form.Item>
                     </Col>
@@ -238,23 +273,68 @@ export default function VendorFormModal({
 
                 <Row gutter={12}>
                     <Col xs={24} md={8}>
-                        <Form.Item label="City" name="city">
+                        <Form.Item label="City" name="city"
+                            rules={[
+                                {
+                                    pattern: /^[A-Za-z\s.,]+$/,
+                                    message:
+                                        "City can only contain letters, spaces, dots and commas",
+                                },
+                                {
+                                    max: 100,
+                                    message: "City cannot exceed 100 characters",
+                                },
+                            ]}
+                        >
                             <Input placeholder="City" />
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={8}>
-                        <Form.Item label="Zip code" name="pincode">
+                        <Form.Item
+                            label="Pin / Zip code"
+                            name="pincode"
+                            rules={[
+                                {
+                                    pattern: /^\d{5}$/,
+                                    message: "Zip code must be exactly 5 digits",
+                                },
+                            ]}
+                        >
                             <Input placeholder="Zip code" />
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={8}>
-                        <Form.Item label="State" name="state">
+                        <Form.Item label="State" name="state"
+                            rules={[
+                                {
+                                    pattern: /^[A-Za-z\s.,]+$/,
+                                    message:
+                                        "State can only contain letters, spaces, dots and commas",
+                                },
+                                {
+                                    max: 100,
+                                    message: "State cannot exceed 100 characters",
+                                },
+                            ]}
+                        >
                             <Input placeholder="State" />
                         </Form.Item>
                     </Col>
                 </Row>
 
-                <Form.Item label="Country" name="country">
+                <Form.Item label="Country" name="country"
+                    rules={[
+                        {
+                            pattern: /^[A-Za-z\s.,]+$/,
+                            message:
+                                "Country can only contain letters, spaces, dots and commas",
+                        },
+                        {
+                            max: 100,
+                            message: "Country cannot exceed 100 characters",
+                        },
+                    ]}
+                >
                     <Input placeholder="Country" />
                 </Form.Item>
             </Form>

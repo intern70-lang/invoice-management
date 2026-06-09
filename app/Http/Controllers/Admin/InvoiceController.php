@@ -25,6 +25,11 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function nextNumber()
+    {
+        return response()->json(['number' => Invoice::generateNumber()]);
+    }
+
     public function create()
     {
         return Inertia::render('Admin/CreateInvoice', [
@@ -62,6 +67,14 @@ class InvoiceController extends Controller
         foreach ($request->items as $item) {
             $product = Product::find($item['product_id']);
 
+            if (!$product) continue;
+
+            if ($product->qty < (int) $item['qty']) {
+                return back()->withErrors([
+                    'items' => "Insufficient stock for \"{$product->name}\". Available: {$product->qty}, requested: {$item['qty']}."
+                ])->withInput();
+            }
+
             $price = (float) $item['selling_price'];
             $qty = (int) $item['qty'];
             $vatPct = (int) $item['vat_percent'];
@@ -85,6 +98,9 @@ class InvoiceController extends Controller
                 'vat_amount'    => $vatAmt,
                 'line_total'    => $lineTotal,
             ]);
+
+            // ✅ Deduct stock
+            $product->decrement('qty', $qty);
 
             $totalVat += $vatAmt;
             $totalAmount += $lineTotal;
@@ -131,6 +147,22 @@ class InvoiceController extends Controller
 
     public function customerData(Customer $customer)
     {
-        return response()->json($customer);
+        return response()->json($customer->load('area'));
+    }
+
+    public function updateStatus(Request $request, Invoice $invoice)
+    {
+        $request->validate([
+            'status' => ['required', 'in:paid,unpaid'],
+        ]);
+
+        $invoice->update([
+            'status' => $request->input('status'),
+        ]);
+
+        return back()->with(
+            'success',
+            "Invoice {$invoice->invoice_number} status updated successfully."
+        );
     }
 }

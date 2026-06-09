@@ -83,35 +83,68 @@ export default function Invoices({ invoices }) {
             ),
         },
         {
+            title: "Status",
+            key: "status",
+            dataIndex: "status",
+            render: (_, record) => {
+                const current = record.status === "paid" ? "paid" : "unpaid";
+
+                return (
+                    <Tag color={current === "paid" ? "green" : "red"}>
+                        {current === "paid" ? "Paid" : "Unpaid"}
+                    </Tag>
+                );
+            },
+        },
+        {
             title: "Actions",
             key: "actions",
             align: "right",
-            render: (_, record) => (
-                <Space size="small">
-                    <Tooltip title="View Invoice">
-                        <Link href={`/admin/invoices/${record.id}`}>
-                            <Button size="small" icon={<Eye size={13} />} />
-                        </Link>
-                    </Tooltip>
+            render: (_, record) => {
+                const isPaid = record.status === "paid";
 
-                    <Popconfirm
-                        title="Delete invoice?"
-                        description={`Are you sure you want to delete "${record.invoice_number}"?`}
-                        onConfirm={() => handleDelete(record)}
-                        okText="Delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
-                    >
-                        <Tooltip title="Delete Invoice">
-                            <Button
-                                size="small"
-                                danger
-                                icon={<Trash2 size={13} />}
-                            />
+                return (
+                    <Space size="small">
+                        {/* Toggle paid/unpaid (Action column only) */}
+                        <Button
+                            size="small"
+                            type={isPaid ? "default" : "primary"}
+                            onClick={() => {
+                                router.patch(
+                                    `/admin/invoices/${record.id}/status`,
+                                    { status: isPaid ? "unpaid" : "paid" },
+                                    { preserveScroll: true },
+                                );
+                            }}
+                        >
+                            {isPaid ? "Mark Unpaid" : "Mark Paid"}
+                        </Button>
+
+                        <Tooltip title="View Invoice">
+                            <Link href={`/admin/invoices/${record.id}`}>
+                                <Button size="small" icon={<Eye size={13} />} />
+                            </Link>
                         </Tooltip>
-                    </Popconfirm>
-                </Space>
-            ),
+
+                        <Popconfirm
+                            title="Delete invoice?"
+                            description={`Are you sure you want to delete "${record.invoice_number}"?`}
+                            onConfirm={() => handleDelete(record)}
+                            okText="Delete"
+                            cancelText="Cancel"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Tooltip title="Delete Invoice">
+                                <Button
+                                    size="small"
+                                    danger
+                                    icon={<Trash2 size={13} />}
+                                />
+                            </Tooltip>
+                        </Popconfirm>
+                    </Space>
+                );
+            },
         },
     ];
 

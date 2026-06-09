@@ -86,7 +86,7 @@ export default function AppLayout({ title, children }) {
                 <Content
                     style={{
                         padding: 24,
-                        marginTop: 73,
+                        // marginTop: 73,
                         background: "var(--bg-primary)",
                         color: "var(--text-primary)",
                     }}

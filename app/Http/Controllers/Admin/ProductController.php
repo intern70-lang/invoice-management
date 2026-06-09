@@ -26,6 +26,11 @@ class ProductController extends Controller
         ]);
     }
 
+    public function nextSku()
+    {
+        return response()->json(['sku' => Product::generateSku()]);
+    }
+
     public function store(Request $request)
     {
         // dd([
@@ -48,6 +53,13 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $this->normalizeProductInput($request);
+
+        if ($request->input('remove_image') === '1' && $product->image) {
+            // delete file from disk
+            $path = public_path($product->image);
+            if (file_exists($path)) unlink($path);
+            $product->image = null;
+        }
 
         $validated = $request->validate(ValidationRules::product($product->id), ValidationRules::productMessages());
 

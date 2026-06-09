@@ -7,8 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Invoice extends Model
 {
     protected $fillable = [
-        'invoice_number', 'customer_id', 'created_by',
-        'invoice_date', 'due_date', 'total_vat', 'total_amount', 'status', 'remarks',
+        'invoice_number',
+        'customer_id',
+        'created_by',
+        'invoice_date',
+        'due_date',
+        'total_vat',
+        'total_amount',
+        'status',
+        'remarks',
     ];
 
     protected $casts = [
@@ -33,8 +40,7 @@ class Invoice extends Model
 
     public static function generateNumber(): string
     {
-        $last = static::latest()->first();
-        $next = $last ? ((int) substr($last->invoice_number, 4)) + 1 : 1;
-        return 'INV-' . str_pad($next, 5, '0', STR_PAD_LEFT);
+        $last = static::max('id') ?? 0;
+        return 'INV-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
     }
 }

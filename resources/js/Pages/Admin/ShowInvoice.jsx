@@ -1,14 +1,14 @@
+// resources/js/Pages/Invoices/ShowInvoice.jsx
 import { Head, Link } from "@inertiajs/react";
-import { Button, Card, Divider, Table, Typography } from "antd";
-
+import { Button, Divider, Table, Tag, Typography, theme } from "antd";
 import { ArrowLeft, Printer } from "lucide-react";
-
 import AppLayout from "@/Layouts/AppLayout";
 import { formatDate } from "../../utils";
 
 const { Title, Text } = Typography;
 
 export default function ShowInvoice({ invoice, settings }) {
+    const { token } = theme.useToken();
     const currency = settings?.currency_symbol || "";
 
     const columns = [
@@ -19,8 +19,7 @@ export default function ShowInvoice({ invoice, settings }) {
         {
             title: "Price",
             align: "right",
-            render: (_, row) =>
-                `${currency}${Number(row.selling_price).toFixed(2)}`,
+            render: (_, row) => `${currency}${Number(row.selling_price).toFixed(2)}`,
         },
         {
             title: "VAT %",
@@ -36,64 +35,100 @@ export default function ShowInvoice({ invoice, settings }) {
         {
             title: "VAT Amount",
             align: "right",
-            render: (_, row) =>
-                `${currency}${Number(row.vat_amount).toFixed(2)}`,
+            render: (_, row) => `${currency}${Number(row.vat_amount).toFixed(2)}`,
         },
         {
             title: "Line Total",
             align: "right",
-            render: (_, row) =>
-                `${currency}${Number(row.line_total).toFixed(2)}`,
+            render: (_, row) => `${currency}${Number(row.line_total).toFixed(2)}`,
         },
     ];
 
     return (
         <AppLayout>
-            <style>
-                {`
-@media print {
+            <style>{`
+    @media print {
+        @page {
+            size: A4;
+            margin: 20mm 15mm;
+        }
 
-    body * {
-        visibility: hidden;
-    }
+        body * { visibility: hidden; }
 
-    #print-area,
-    #print-area * {
-        visibility: visible;
-    }
+        #print-area,
+        #print-area * { visibility: visible; }
 
-    #print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        box-shadow: none !important;
-        border: none !important;
-    }
+        #print-area {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+        }
 
-    .ant-layout-sider,
-    .ant-layout-header,
-    .ant-menu,
-    button {
-        display: none !important;
+        /* Force all text colors for print */
+        #print-area * {
+            color: #000000 !important;
+            border-color: #e0e0e0 !important;
+            background: transparent !important;
+        }
+
+        /* Keep primary color on INVOICE title and total */
+        #print-area .invoice-title,
+        #print-area .invoice-total {
+            color: #467CD5 !important;
+        }
+
+        /* Table */
+        #print-area .ant-table-thead > tr > th {
+            background: #f5f5f5 !important;
+            color: #000 !important;
+            border-bottom: 1px solid #e0e0e0 !important;
+        }
+
+        #print-area .ant-table-tbody > tr > td {
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+
+        /* Remarks box */
+        #print-area .remarks-box {
+            background: #f9f9f9 !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+
+        .print-hidden,
+        .ant-layout-sider,
+        .ant-layout-header { display: none !important; }
     }
-}
-`}
-            </style>
+`}</style>
+
             <Head title={`Invoice ${invoice.invoice_number}`} />
 
-            <div className="max-w-5xl mx-auto">
-                <div className="flex justify-between mb-6 print:hidden">
-                    <div className="flex items-center gap-3">
+            <div style={{ maxWidth: 860, margin: "0 auto" }}>
+
+                {/* ── Top bar ── */}
+                <div
+                    className="print-hidden"
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 24,
+                    }}
+                >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <Link href="/admin/invoices">
                             <Button icon={<ArrowLeft size={16} />} />
                         </Link>
-
                         <Title level={4} style={{ margin: 0 }}>
                             {invoice.invoice_number}
                         </Title>
                     </div>
-
                     <Button
                         type="primary"
                         icon={<Printer size={16} />}
@@ -103,137 +138,229 @@ export default function ShowInvoice({ invoice, settings }) {
                     </Button>
                 </div>
 
-                <Card id="print-area">
-                    <div className="flex justify-between mb-10">
+                {/* ── Invoice card ── */}
+                <div
+                    id="print-area"
+                    style={{
+                        background: token.colorBgContainer,
+                        border: `1px solid ${token.colorBorderSecondary}`,
+                        borderRadius: token.borderRadiusLG,
+                        padding: "48px 56px",
+                    }}
+                >
+                    {/* Header: logo/company + invoice meta */}
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: 48,
+                        }}
+                    >
+                        {/* Left: branding */}
                         <div>
                             {settings.logo && (
                                 <img
                                     src={`/storage/${settings.logo}`}
                                     alt="Logo"
-                                    className="h-12 mb-3"
+                                    style={{ height: 48, marginBottom: 12, display: "block" }}
                                 />
                             )}
-
-                            <Title level={3}>{settings.app_name}</Title>
-
+                            <Title level={3} style={{ margin: "0 0 8px" }}>
+                                {settings.app_name}
+                            </Title>
                             {settings.address && (
-                                <Text type="secondary" className="block">
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.7 }}>
                                     {settings.address}
                                 </Text>
                             )}
-
                             {settings.phone && (
-                                <Text type="secondary" className="block">
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.7 }}>
                                     {settings.phone}
                                 </Text>
                             )}
-
                             {settings.email && (
-                                <Text type="secondary" className="block">
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.7 }}>
                                     {settings.email}
                                 </Text>
                             )}
                         </div>
 
-                        <div className="text-right">
-                            <Title level={2}>INVOICE</Title>
-
-                            <Text strong>{invoice.invoice_number}</Text>
-
-                            <br />
-
-                            <Text type="secondary">
+                        {/* Right: invoice title + meta */}
+                        <div style={{ textAlign: "right" }}>
+                            <div
+                                className="invoice-title"
+                                style={{
+                                    fontSize: 32,
+                                    fontWeight: 700,
+                                    letterSpacing: 3,
+                                    color: token.colorPrimary,
+                                    marginBottom: 12,
+                                    lineHeight: 1,
+                                }}
+                            >
+                                INVOICE
+                            </div>
+                            <Text strong style={{ fontSize: 15, display: "block", marginBottom: 6 }}>
+                                {invoice.invoice_number}
+                            </Text>
+                            <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
                                 Date: {formatDate(invoice.invoice_date)}
                             </Text>
-
-                            <br />
-
-                            <Text type="secondary">
-                                Due Date: {formatDate(invoice.due_date)}
+                            <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                Due: {formatDate(invoice.due_date)}
                             </Text>
+
+                            <div style={{ marginTop: 12 }}>
+                                <Tag color={invoice.status === "paid" ? "green" : "red"}>
+                                    {invoice.status === "paid" ? "Paid" : "Unpaid"}
+                                </Tag>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-10 mb-8">
-                        <div className="space-y-1!">
-                            <Text strong>Bill To</Text>
+                    <Divider style={{ margin: "0 0 36px" }} />
 
-                            <Divider className="mt-2!" />
-
-                            <p>{invoice.customer.name}</p>
-
+                    {/* Bill To + Payment Details */}
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: 40,
+                            marginBottom: 40,
+                        }}
+                    >
+                        {/* Bill To */}
+                        <div>
+                            <Text
+                                style={{
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    letterSpacing: 1.2,
+                                    textTransform: "uppercase",
+                                    color: token.colorTextTertiary,
+                                    display: "block",
+                                    marginBottom: 10,
+                                }}
+                            >
+                                Bill To
+                            </Text>
+                            <Text strong style={{ fontSize: 15, display: "block", marginBottom: 4 }}>
+                                {invoice.customer.name}
+                            </Text>
                             {invoice.customer.email && (
-                                <p>{invoice.customer.email}</p>
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                    {invoice.customer.email}
+                                </Text>
                             )}
-
                             {invoice.customer.phone && (
-                                <p>{invoice.customer.phone}</p>
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                    {invoice.customer.phone}
+                                </Text>
                             )}
-
                             {invoice.customer.address && (
-                                <p>{invoice.customer.address}</p>
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                    {invoice.customer.address}
+                                </Text>
                             )}
-
-                            {invoice.customer.vat_registered &&
-                                invoice.customer.vat_number && (
-                                    <p>
-                                        VAT No:{" "}
-                                        <strong>
-                                            {invoice.customer.vat_number}
-                                        </strong>
-                                    </p>
-                                )}
+                            {invoice.customer.vat_registered && invoice.customer.vat_number && (
+                                <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                    VAT No: <Text strong>{invoice.customer.vat_number}</Text>
+                                </Text>
+                            )}
                         </div>
 
+                        {/* Payment Details */}
                         {(settings.bank_name || settings.iban) && (
-                            <div className="space-y-1!">
-                                <Text strong>Payment Details</Text>
-
-                                <Divider className="mt-2!" />
-
+                            <div>
+                                <Text
+                                    style={{
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                        letterSpacing: 1.2,
+                                        textTransform: "uppercase",
+                                        color: token.colorTextTertiary,
+                                        display: "block",
+                                        marginBottom: 10,
+                                    }}
+                                >
+                                    Payment Details
+                                </Text>
                                 {settings.bank_name && (
-                                    <p>Bank: {settings.bank_name}</p>
+                                    <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                        Bank: <Text strong>{settings.bank_name}</Text>
+                                    </Text>
                                 )}
-
-                                {settings.iban && <p>IBAN: {settings.iban}</p>}
-
+                                {settings.iban && (
+                                    <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                        IBAN: <Text strong>{settings.iban}</Text>
+                                    </Text>
+                                )}
                                 {settings.swift_code && (
-                                    <p>SWIFT: {settings.swift_code}</p>
+                                    <Text type="secondary" style={{ display: "block", lineHeight: 1.8 }}>
+                                        SWIFT: <Text strong>{settings.swift_code}</Text>
+                                    </Text>
                                 )}
                             </div>
                         )}
                     </div>
 
+                    {/* Items table */}
                     <Table
                         rowKey="id"
                         pagination={false}
                         columns={columns}
                         dataSource={invoice.items}
+                        style={{ marginBottom: 32 }}
                     />
 
-                    <div className="mt-6">
-                        <Text type="secondary">
-                            Remarks: {invoice.remarks || "No remarks"}
-                        </Text>
-                    </div>
+                    {/* Remarks */}
+                    {invoice.remarks && (
+                        <div
+                            className="remarks-box"
+                            style={{
+                                background: token.colorFillAlter,
+                                borderRadius: token.borderRadius,
+                                padding: "12px 16px",
+                                marginBottom: 32,
+                            }}
+                        >
+                            <Text type="secondary" style={{ fontSize: 13 }}>
+                                <Text strong>Remarks: </Text>
+                                {invoice.remarks}
+                            </Text>
+                        </div>
+                    )}
 
-                    <div className="flex justify-end mt-8">
-                        <div className="w-72">
-                            <div className="flex justify-between mb-2">
-                                <Text>Total VAT</Text>
-
-                                <Text>
-                                    {currency}
-                                    {Number(invoice.total_vat).toFixed(2)}
+                    {/* Totals */}
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <div style={{ width: 300 }}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    padding: "8px 0",
+                                    borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                                    marginBottom: 8,
+                                }}
+                            >
+                                <Text type="secondary">Total VAT</Text>
+                                <Text type="secondary">
+                                    {currency}{Number(invoice.total_vat).toFixed(2)}
                                 </Text>
                             </div>
-
-                            <div className="flex justify-between">
-                                <Title level={5}>Total Amount</Title>
-
-                                <Title level={5}>
-                                    {currency}
-                                    {Number(invoice.total_amount).toFixed(2)}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    padding: "10px 0",
+                                }}
+                            >
+                                <Title level={5} style={{ margin: 0 }}>
+                                    Total Amount
+                                </Title>
+                                <Title level={5} className="invoice-total" style={{ margin: 0, color: token.colorPrimary }}>
+                                    {currency}{Number(invoice.total_amount).toFixed(2)}
                                 </Title>
                             </div>
                         </div>
@@ -241,11 +368,13 @@ export default function ShowInvoice({ invoice, settings }) {
 
                     <Divider />
 
-                    <div className="text-center text-gray-500">
-                        Thank you for your business! Generated by{" "}
-                        {settings.app_name}
+                    {/* Footer */}
+                    <div style={{ textAlign: "center" }}>
+                        <Text type="secondary" style={{ fontSize: 13 }}>
+                            Thank you for your business! Generated by {settings.app_name}
+                        </Text>
                     </div>
-                </Card>
+                </div>
             </div>
         </AppLayout>
     );

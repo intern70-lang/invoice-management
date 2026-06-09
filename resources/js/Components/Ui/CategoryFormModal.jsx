@@ -104,7 +104,7 @@ export default function CategoryFormModal({
                 </div>
             }
             width={420}
-            destroyOnClose
+            destroyOnHidden
             maskClosable={!processing}
         >
             <Divider className="my-3!" />

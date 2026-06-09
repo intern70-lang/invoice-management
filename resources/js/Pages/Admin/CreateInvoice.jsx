@@ -1,6 +1,6 @@
 // resources/js/Pages/Admin/CreateInvoice.jsx
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import {
     Button,
@@ -39,6 +39,7 @@ const calcRow = (price, qty, vatPct) => {
 // ── component ────────────────────────────────────────────────────────────────
 export default function CreateInvoice({ customers, areas = [], products, settings }) {
     const currency = settings?.currency_symbol ?? "£";
+    const [invoiceNumber, setInvoiceNumber] = useState(null);
 
     const [form] = Form.useForm();
 
@@ -67,6 +68,12 @@ export default function CreateInvoice({ customers, areas = [], products, setting
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
 
+    useEffect(() => {
+        fetch('/admin/invoices/next-number')
+            .then(r => r.json())
+            .then(({ number }) => setInvoiceNumber(number));
+    }, []);
+
     // ── customer info fetch ──────────────────────────────────────────────────
     const loadCustomerInfo = async (id) => {
         if (!id) {
@@ -88,6 +95,18 @@ export default function CreateInvoice({ customers, areas = [], products, setting
         form.setFieldValue("customer_id", newCustomer.id);
         loadCustomerInfo(newCustomer.id);
         setQuickOpen(false);
+    };
+
+    //  New handler and pass it to the modal
+    const handleQuickDuplicate = (email) => {
+        const existing = customerList.find(
+            (c) => c.email?.toLowerCase() === email?.toLowerCase()
+        );
+        if (existing) {
+            form.setFieldValue("customer_id", existing.id);
+            loadCustomerInfo(existing.id);
+            setQuickOpen(false);
+        }
     };
 
     // ── row helpers ──────────────────────────────────────────────────────────
@@ -189,6 +208,8 @@ export default function CreateInvoice({ customers, areas = [], products, setting
         });
     };
 
+    console.log("Render", { customerInfo, rows, totalVat, totalAmount });
+
     // ── render ────────────────────────────────────────────────────────────────
     return (
         <>
@@ -214,7 +235,6 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                     <Form
                         form={form}
                         layout="vertical"
-                        requiredMark="optional"
                         size="middle"
                         variant="filled"
                         initialValues={{
@@ -226,6 +246,17 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                         <div className="card p-5 mb-4 space-y-4">
                             {/* Dates + Customer row */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                                {/* Invoice Number */}
+                                <Form.Item label="Invoice Number" className="m-0!">
+                                    <Input
+                                        size="large"
+                                        value={invoiceNumber ?? 'Generating...'}
+                                        readOnly
+                                        className="cursor-not-allowed opacity-70 font-mono"
+                                    />
+                                </Form.Item>
+
                                 {/* Invoice Date */}
                                 <Form.Item
                                     label="Invoice Date"
@@ -357,24 +388,44 @@ export default function CreateInvoice({ customers, areas = [], products, setting
 
                             {/* Customer info panel */}
                             {customerInfo && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-(--surface-2) rounded-lg">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-(--bg-primary) rounded-lg">
                                     {[
+                                        { label: "Name", value: customerInfo.name },
+                                        { label: "Email", value: customerInfo.email },
+                                        { label: "Phone", value: customerInfo.phone },
                                         {
-                                            label: "Name",
-                                            value: customerInfo.name,
+                                            label: "Birth Date",
+                                            value: customerInfo.birthdate
+                                                ? new Date(customerInfo.birthdate).toLocaleDateString(
+                                                    "en-US",
+                                                    {
+                                                        month: "2-digit",
+                                                        day: "2-digit",
+                                                        year: "numeric",
+                                                    }
+                                                )
+                                                : null,
                                         },
+                                        { label: "Gender", value: customerInfo.gender },
+                                        { label: "Customer Type", value: customerInfo.customer_type },
+                                        { label: "Area", value: customerInfo.area?.name },
+                                        { label: "Address", value: customerInfo.address },
                                         {
-                                            label: "Email",
-                                            value: customerInfo.email,
+                                            label: "Shipping Address",
+                                            value: customerInfo.shipping_address,
                                         },
+                                        { label: "City", value: customerInfo.city },
+                                        { label: "State", value: customerInfo.state },
+                                        { label: "Country", value: customerInfo.country },
+                                        { label: "Pin Code", value: customerInfo.pin_code },
+                                        { label: "Landmark", value: customerInfo.landmark },
+                                        { label: "Credit Days", value: customerInfo.credit_day },
+                                        { label: "Credit Amount", value: customerInfo.credit_amount },
                                         {
-                                            label: "Phone",
-                                            value: customerInfo.phone,
+                                            label: "VAT Registered",
+                                            value: customerInfo.vat_registered ? "Yes" : "No",
                                         },
-                                        {
-                                            label: "Area",
-                                            value: customerInfo.area?.name,
-                                        },
+                                        { label: "VAT Number", value: customerInfo.vat_registered ? customerInfo.vat_number : null },
                                     ].map(({ label, value }) => (
                                         <div key={label}>
                                             <p className="text-xs text-(--text-secondary) m-0!">
@@ -481,7 +532,8 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                                                         options={products.map(
                                                             (p) => ({
                                                                 value: p.id,
-                                                                label: p.name,
+                                                                label: `${p.name} (Stock: ${p.qty ?? 0})`,
+                                                                disabled: (p.qty ?? 0) <= 0,  // ✅ disable out-of-stock products
                                                             }),
                                                         )}
                                                         onChange={(val) =>
@@ -493,7 +545,7 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                                                         className="w-full"
                                                         status={
                                                             errors.items &&
-                                                            !row.product_id
+                                                                !row.product_id
                                                                 ? "error"
                                                                 : undefined
                                                         }
@@ -564,6 +616,7 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                                                                     row.product_id,
                                                             )?.moq ?? 1
                                                         }
+                                                        max={products.find((p) => p.id === row.product_id)?.qty ?? 999999} // ✅ cap at stock
                                                         precision={0}
                                                         value={row.qty}
                                                         onChange={(val) =>
@@ -579,7 +632,7 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                                                         className="w-full"
                                                         status={
                                                             errors.items &&
-                                                            row.qty < 1
+                                                                row.qty < 1
                                                                 ? "error"
                                                                 : undefined
                                                         }
@@ -684,6 +737,7 @@ export default function CreateInvoice({ customers, areas = [], products, setting
                 mode="quick"
                 areas={areas}
                 onSuccess={handleQuickSuccess}
+                onDuplicateEmail={handleQuickDuplicate}
             />
         </>
     );

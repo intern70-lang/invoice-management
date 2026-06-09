@@ -107,11 +107,11 @@ export default function Products({ products, categories, manufacturers = [] }) {
                             {record.item_code || "No code"}
                             {record.regional_name ? ` · ${record.regional_name}` : ""}
                         </p>
-                        {record.description && (
+                        {/* {record.description && (
                             <p className="text-xs text-(--text-secondary) m-0 mt-0.5 max-w-xs truncate">
                                 {record.description}
                             </p>
-                        )}
+                        )} */}
                     </div>
                 </div>
             ),

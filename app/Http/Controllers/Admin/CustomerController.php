@@ -33,7 +33,7 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
-        $request->validate(ValidationRules::customer(), ValidationRules::customerMessages());
+        $request->validate(ValidationRules::customer($customer->id), ValidationRules::customerMessages());
 
         $customer->update($this->customerPayload($request));
 
@@ -49,23 +49,23 @@ class CustomerController extends Controller
     }
 
     // Quick store via JSON (from invoice page quick-add modal)
-    public function quickStore(Request $request)
-    {
-        $validator = \Illuminate\Support\Facades\Validator::make(
-            $request->all(),
-            ValidationRules::customer(),
-            ValidationRules::customerMessages()
-        );
+    // public function quickStore(Request $request)
+    // {
+    //     $validator = \Illuminate\Support\Facades\Validator::make(
+    //         $request->all(),
+    //         ValidationRules::customer(),
+    //         ValidationRules::customerMessages()
+    //     );
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
 
-        $customer = Customer::create($this->customerPayload($request));
-        $customer->load('area');
+    //     $customer = Customer::create($this->customerPayload($request));
+    //     $customer->load('area');
 
-        return response()->json($customer);
-    }
+    //     return response()->json($customer);
+    // }
 
     private function customerPayload(Request $request): array
     {
@@ -86,6 +86,8 @@ class CustomerController extends Controller
             'landmark' => $request->landmark,
             'credit_day' => $request->credit_day,
             'credit_amount' => $request->credit_amount,
+            'vat_registered' => $request->vat_registered,
+            'vat_number' => $request->vat_registered ? $request->vat_number : null
         ];
     }
 }

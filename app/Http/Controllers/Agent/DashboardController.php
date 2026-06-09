@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -18,6 +19,6 @@ class DashboardController extends Controller
             'revenue'  => Invoice::where('created_by', auth()->id())->sum('total_amount'),
         ];
 
-        return view('agent.dashboard', compact('recentInvoices', 'stats'));
+        return inertia('Agent/Dashboard', compact('recentInvoices', 'stats'));
     }
 }

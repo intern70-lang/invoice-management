@@ -17,7 +17,7 @@ export default function CustomTable({
                 rowKey={rowKey}
                 pagination={pagination}
                 className="w-full"
-                scroll={{ x: 'calc(700px + 50%)' }}
+                scroll={{ x: 'calc(300px + 50%)' }}
             />
         </div>
     );
